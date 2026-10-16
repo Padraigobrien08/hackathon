@@ -5,7 +5,8 @@
 
 ## Stack
 - Backend: FastAPI, Python 3.12, managed with `uv` — `backend/app/main.py` (routes + Pydantic contract), `backend/app/llm.py` (all LLM calls).
-- Frontend: React + TypeScript + Vite — `frontend/src/App.tsx`, `frontend/src/api.ts` (typed client mirroring the Pydantic models).
+- Frontend: React + TypeScript + Vite + Tailwind v4 + shadcn/ui — `frontend/src/App.tsx`, `frontend/src/api.ts` (typed client mirroring the Pydantic models).
+- UI: use shadcn components from `@/components/ui` (button, card, input, textarea, badge, skeleton, alert, sonner, tabs installed). Add more with `cd frontend && npx shadcn@latest add <name>`; don't hand-write components shadcn already has. Style with Tailwind classes, not custom CSS.
 - Vite proxies `/api/*` to `localhost:8000`; frontend always calls relative `/api/...` URLs.
 
 ## Run
@@ -21,7 +22,7 @@
 - After a change, verify it: curl the endpoint and/or check it in the browser. Don't say done without checking.
 - After 15:00 (feature freeze): bug fixes and demo polish only.
 - Speed over ceremony today: only show a plan first for multi-feature work; otherwise just build and report.
-- This repo uses Vite + npm and plain CSS (not Next.js/pnpm/shadcn) — stick with it; switching mid-hackathon costs too much time.
+- This repo uses Vite + npm (not Next.js/pnpm) — stick with it; switching mid-hackathon costs too much time.
 
 ## Lessons (add one line each time Claude gets the same thing wrong twice)
 -
