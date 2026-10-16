@@ -1,6 +1,6 @@
 ---
 name: add-feature
-description: Add a new feature end to end in this hackathon app — API contract, mock + real backend, and UI wiring — then verify it runs. Use when asked to add an endpoint, feature, or new AI capability.
+description: Add a new feature end to end in this hackathon app — API contract, mock + real backend, and UI wiring — then verify it runs. Use whenever the user wants to build, add, or wire up something new: "add a X endpoint", "let's build the summary feature", "make it also do Y", "hook this up to the UI", or any new AI capability.
 ---
 
 Add the feature described in the arguments, in this order. Keep it minimal: the smallest version that demos well.

@@ -20,3 +20,8 @@
 - Three people work on `main` in parallel: keep changes small and inside the files your task needs.
 - After a change, verify it: curl the endpoint and/or check it in the browser. Don't say done without checking.
 - After 15:00 (feature freeze): bug fixes and demo polish only.
+- Speed over ceremony today: only show a plan first for multi-feature work; otherwise just build and report.
+- This repo uses Vite + npm and plain CSS (not Next.js/pnpm/shadcn) — stick with it; switching mid-hackathon costs too much time.
+
+## Lessons (add one line each time Claude gets the same thing wrong twice)
+-

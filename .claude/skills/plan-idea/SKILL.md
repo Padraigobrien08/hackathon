@@ -1,6 +1,6 @@
 ---
 name: plan-idea
-description: Turn a rough hackathon idea into a scoped build plan — the one core demo, 2–3 features, API contracts, and a task split for a team of 3. Use at the start of the day or when the team is choosing between ideas.
+description: Turn a rough hackathon idea into a scoped build plan — the one core demo, 2–3 features, API contracts, and a task split for a team of 3. Use when the user describes an idea, asks "what should we build?", compares ideas, asks if something is too big, or needs to re-scope after falling behind.
 ---
 
 The arguments are a rough idea (or several to compare). Read `CLAUDE.md` and the current code first so the plan fits the existing skeleton. Do not write code.

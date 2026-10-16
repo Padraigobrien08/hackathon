@@ -1,6 +1,6 @@
 ---
 name: demo-ready
-description: Pre-demo hardening pass — create convincing demo inputs, run the full demo path, and fix only what would break or embarrass on stage. Use around feature freeze (15:00) or before rehearsing.
+description: Pre-demo hardening pass — create convincing demo inputs, run the full demo path, and fix only what would break or embarrass on stage. Use when the user says "feature freeze", "get it demo ready", "will this break on stage?", "we need demo data", or asks to rehearse, and around 15:00.
 ---
 
 Goal: the demo works every time. Do not add features.

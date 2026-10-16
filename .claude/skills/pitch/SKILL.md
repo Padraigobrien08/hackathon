@@ -1,6 +1,6 @@
 ---
 name: pitch
-description: Write a 2-minute hackathon pitch and demo script from what's actually built, then optionally role-play as a judge. Use near the end of the day when preparing to present.
+description: Write a 2-minute hackathon pitch and demo script from what's actually built, then optionally role-play as a judge. Use when the user mentions the pitch, presenting, slides, what to say to the judges, practising questions, or when it's near the end of the day.
 ---
 
 1. Read `CLAUDE.md`, the code, and `demo/inputs.md` if it exists. Pitch only what actually works — never claim features that aren't built.
