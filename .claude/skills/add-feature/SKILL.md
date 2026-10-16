@@ -7,7 +7,7 @@ Add the feature described in the arguments, in this order. Keep it minimal: the 
 
 1. **Contract first.** Propose the request/response shape in one short block and state it before writing code. Add the Pydantic models + route in `backend/app/main.py` and the matching TS types + fetch function in `frontend/src/api.ts`.
 2. **Mock path.** Make the route return realistic fake data when `llm.USE_MOCK` is true, so the frontend can be built immediately.
-3. **Real path.** Add the LLM logic in `backend/app/llm.py` (reuse the existing client and call pattern). If structured output is needed, ask the model for JSON and parse it defensively, falling back to a sensible default.
+3. **Real path.** Add the LLM logic in `backend/app/llm.py` (reuse the existing client, model, effort and fallback settings). Whenever the response is more than plain text, use structured outputs so the shape is guaranteed and the demo can't break on malformed JSON: define a Pydantic model for the output and call `_client.beta.messages.parse(..., output_format=YourModel)`, then read `response.parsed_output`. If `stop_reason == "refusal"` or `parsed_output` is None, return a sensible default in the contract's shape instead of raising.
 4. **UI.** Wire it into `frontend/src/App.tsx` (or a new component if App.tsx is getting crowded). Plain and readable beats pretty.
 5. **Verify.** Typecheck (`cd frontend && npx tsc -b`), start the backend if it isn't running, curl the new endpoint in mock mode, and report the actual response.
 6. **Summarise** in 3–4 lines: the contract, files touched, and anything a teammate needs to know.
