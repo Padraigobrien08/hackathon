@@ -43,5 +43,5 @@ def health():
 @app.post("/api/ask", response_model=AskResponse)
 def ask(req: AskRequest) -> AskResponse:
     answer = llm.complete(req.question, req.context)
-    sources = [Source(title="Provided context", snippet=req.context[:200])] if req.context else []
+    sources = [Source(title="Provided context", snippet=req.context[:200] + ("…" if len(req.context) > 200 else ""))] if req.context else []
     return AskResponse(answer=answer, sources=sources, mock=llm.USE_MOCK)

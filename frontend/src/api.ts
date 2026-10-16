@@ -11,6 +11,8 @@ export async function ask(req: AskRequest): Promise<AskResponse> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(req),
   })
-  if (!res.ok) throw new Error(`API error ${res.status}: ${await res.text()}`)
+  if (res.status === 502 || res.status === 504)
+    throw new Error("Can't reach the server. Is the backend running? (./dev.sh)")
+  if (!res.ok) throw new Error(`Server error (${res.status}). Please try again.`)
   return res.json()
 }

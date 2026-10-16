@@ -23,7 +23,7 @@ export default function App() {
     try {
       setResult(await ask({ question, context: context || undefined }))
     } catch (err) {
-      setError(String(err))
+      setError(err instanceof Error ? err.message : String(err))
     } finally {
       setLoading(false)
     }

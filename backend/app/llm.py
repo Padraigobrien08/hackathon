@@ -9,7 +9,8 @@ MODEL = os.getenv("MODEL", "claude-opus-5-5")
 
 SYSTEM_PROMPT = (
     "You are a helpful assistant inside a hackathon demo app. "
-    "Answer clearly and concisely. If context is provided, ground your answer in it."
+    "Answer clearly and concisely. If context is provided, ground your answer in it. "
+    "Reply in plain text with no markdown: the UI does not render it. Use short paragraphs; for lists, write numbered lines like '1. ...'."
 )
 
 _client = None if USE_MOCK else anthropic.Anthropic()
