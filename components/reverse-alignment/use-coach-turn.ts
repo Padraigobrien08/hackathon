@@ -32,16 +32,25 @@ function recordPromptMetric(
   }).catch(() => undefined);
 }
 
-function persistInsight(
+async function persistInsight(
   chatId: string,
   assistantMessageId: string,
   insight: { decision: CoachResponse["decision"]; scripted: boolean }
 ) {
-  fetch(`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api/coach/insights`, {
-    body: JSON.stringify({ assistantMessageId, chatId, ...insight }),
-    headers: { "Content-Type": "application/json" },
-    method: "POST",
-  }).catch(() => undefined);
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api/coach/insights`,
+      {
+        body: JSON.stringify({ assistantMessageId, chatId, ...insight }),
+        headers: { "Content-Type": "application/json" },
+        keepalive: true,
+        method: "POST",
+      }
+    );
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
 
 type FinishInfo = {
@@ -180,8 +189,12 @@ export function useCoachTurn(chatId: string) {
         decision: response.decision,
         scripted: response.source === "fixture" || demo,
       };
+      // Only present a tip once durable storage confirms it. Anything the user
+      // can see will therefore still be there after a refresh.
+      if (!(await persistInsight(chatId, message.id, insight))) {
+        return;
+      }
       setInsight(message.id, insight);
-      persistInsight(chatId, message.id, insight);
       dispatch({ category: response.decision.category, type: "TIP_SHOWN" });
     },
     [chatId, demo, dispatch, setAdaptation, setInsight, setOffer, setStrength]
