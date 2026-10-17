@@ -4,7 +4,6 @@ import type { UseChatHelpers } from "@ai-sdk/react";
 import { motion } from "framer-motion";
 import { memo, useCallback } from "react";
 import { suggestions } from "@/lib/constants";
-import { LIVE_SUGGESTION, markChatLive } from "@/lib/reverse-alignment/live";
 import type { ChatMessage } from "@/lib/types";
 import { Suggestion } from "../ai-elements/suggestion";
 import type { VisibilityType } from "./visibility-selector";
@@ -24,9 +23,6 @@ function PureSuggestedActions({
   const suggestedActions = suggestions;
   const handleSuggestionClick = useCallback(
     (suggestion: string) => {
-      if (suggestion === LIVE_SUGGESTION) {
-        markChatLive(chatId);
-      }
       window.history.pushState(
         {},
         "",
@@ -70,11 +66,6 @@ function PureSuggestedActions({
             suggestion={suggestedAction}
           >
             {suggestedAction}
-            {suggestedAction === LIVE_SUGGESTION ? (
-              <span className="ml-2 rounded border border-border/60 px-1.5 py-0.5 text-[10px] uppercase tracking-wide">
-                live
-              </span>
-            ) : null}
           </Suggestion>
         </motion.div>
       ))}

@@ -28,7 +28,6 @@ const toolApprovalMessageSchema = z.object({
 
 export const postRequestBodySchema = z.object({
   id: z.uuid(),
-  live: z.boolean().optional(),
   message: userMessageSchema.optional(),
   messages: z.array(toolApprovalMessageSchema).optional(),
   // Reverse Alignment: user-approved styles only (ConfirmedStyles).

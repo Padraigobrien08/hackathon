@@ -19,17 +19,14 @@ export async function POST(request: Request) {
       return Response.json(silent);
     }
     return Response.json(
-      await observe(
-        {
-          assistantReply: body.assistantReply,
-          previousUserMessage:
-            typeof body.previousUserMessage === "string"
-              ? body.previousUserMessage
-              : undefined,
-          userMessage: body.userMessage,
-        },
-        { live: body.live === true }
-      )
+      await observe({
+        assistantReply: body.assistantReply,
+        previousUserMessage:
+          typeof body.previousUserMessage === "string"
+            ? body.previousUserMessage
+            : undefined,
+        userMessage: body.userMessage,
+      })
     );
   } catch {
     return Response.json(silent);

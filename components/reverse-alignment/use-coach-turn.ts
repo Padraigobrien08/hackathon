@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { isSimple } from "@/lib/reverse-alignment/fixtures";
-import { isChatLive } from "@/lib/reverse-alignment/live";
 import { preGate, shouldShowTip } from "@/lib/reverse-alignment/policy";
 import {
   detectCorrection,
@@ -67,15 +66,8 @@ type FinishInfo = {
  * and nothing here can delay or break the answer itself.
  */
 export function useCoachTurn(chatId: string) {
-  const {
-    state,
-    dispatch,
-    setInsight,
-    setOffer,
-    setAdaptation,
-    setStrength,
-    demo,
-  } = useCoach();
+  const { state, dispatch, setInsight, setOffer, setAdaptation, setStrength } =
+    useCoach();
   // onFinish is registered once by useChat, so read the latest coach state through a ref.
   const stateRef = useRef(state);
   useEffect(() => {
@@ -143,7 +135,7 @@ export function useCoachTurn(chatId: string) {
       // unless the user opted in to a tier on every prompt.
       if (
         !(
-          preGate(afterTurn.prefs, afterTurn.signals, { demo }) ||
+          preGate(afterTurn.prefs, afterTurn.signals) ||
           afterTurn.prefs.showStrength
         )
       ) {
@@ -165,7 +157,6 @@ export function useCoachTurn(chatId: string) {
           {
             body: JSON.stringify({
               assistantReply: replyText,
-              live: isChatLive(chatId),
               previousUserMessage: previousUserText,
               userMessage: userText,
             }),
@@ -192,20 +183,18 @@ export function useCoachTurn(chatId: string) {
           ratingId,
           response.strength && prefs.showStrength
             ? {
-                scripted: response.source === "fixture" || demo,
+                scripted: response.source === "fixture",
                 strength: response.strength,
               }
             : null
         );
       }
-      if (
-        !shouldShowTip(response.decision, prefs, signals, response, { demo })
-      ) {
+      if (!shouldShowTip(response.decision, prefs, signals, response)) {
         return;
       }
       const insight = {
         decision: response.decision,
-        scripted: response.source === "fixture" || demo,
+        scripted: response.source === "fixture",
       };
       // Only present a tip once durable storage confirms it. Anything the user
       // can see will therefore still be there after a refresh.
@@ -215,6 +204,6 @@ export function useCoachTurn(chatId: string) {
       setInsight(message.id, insight);
       dispatch({ category: response.decision.category, type: "TIP_SHOWN" });
     },
-    [chatId, demo, dispatch, setAdaptation, setInsight, setOffer, setStrength]
+    [chatId, dispatch, setAdaptation, setInsight, setOffer, setStrength]
   );
 }

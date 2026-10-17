@@ -37,15 +37,12 @@ import {
   ModelSelectorName,
   ModelSelectorTrigger,
 } from "@/components/ai-elements/model-selector";
-import { ClarifyPrompt } from "@/components/reverse-alignment/clarify-prompt";
-import { useCoach } from "@/components/reverse-alignment/coach-provider";
 import {
   type ChatModel,
   chatModels,
   DEFAULT_CHAT_MODEL,
   type ModelCapabilities,
 } from "@/lib/ai/models";
-import { clarifyingQuestion } from "@/lib/reverse-alignment/clarify";
 import type { Attachment, ChatMessage } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import {
@@ -118,9 +115,6 @@ function PureMultimodalInput({
   const router = useRouter();
   const { setTheme, resolvedTheme } = useTheme();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { state: coachState } = useCoach();
-  // Reverse Alignment: a typed prompt too thin to answer well gets one question first (skippable).
-  const [clarify, setClarify] = useState<string | null>(null);
   const { width } = useWindowSize();
   const hasAutoFocused = useRef(false);
   useEffect(() => {
@@ -419,36 +413,11 @@ function PureMultimodalInput({
       return;
     }
     if (status === "ready" || status === "error") {
-      const question =
-        coachState.prefs.enabled &&
-        coachState.prefs.frequency !== "off" &&
-        attachments.length === 0
-          ? clarifyingQuestion(input)
-          : null;
-      // Unchanged text keeps the question up; "Just answer" is the only way past it.
-      if (question) {
-        setClarify(question);
-        return;
-      }
-      setClarify(null);
       submitForm();
     } else {
       toast.error("Please wait for the model to finish its response!");
     }
-  }, [
-    attachments.length,
-    coachState.prefs.enabled,
-    coachState.prefs.frequency,
-    handleSlashSelect,
-    input,
-    status,
-    submitForm,
-  ]);
-
-  const handleJustAnswer = useCallback(() => {
-    setClarify(null);
-    submitForm();
-  }, [submitForm]);
+  }, [attachments.length, handleSlashSelect, input, status, submitForm]);
 
   const handleTextareaKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -541,10 +510,6 @@ function PureMultimodalInput({
           />
         ) : null}
       </div>
-
-      {clarify ? (
-        <ClarifyPrompt onJustAnswer={handleJustAnswer} question={clarify} />
-      ) : null}
 
       <PromptInput
         className="[&>div]:rounded-2xl [&>div]:border [&>div]:border-border/30 [&>div]:bg-card/70 [&>div]:shadow-[var(--shadow-composer)] [&>div]:transition-shadow [&>div]:duration-300 [&>div]:focus-within:shadow-[var(--shadow-composer-focus)]"

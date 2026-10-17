@@ -22,25 +22,15 @@ export const myProvider = useMock
     })()
   : null;
 
-// OpenAI only. The live demo chip (lib/reverse-alignment/live.ts) uses this model even in mock mode.
-const OPENAI_CHAT_MODEL = "gpt-6-luna";
-const hasOpenAI = Boolean(process.env.OPENAI_API_KEY);
-
 /** The model that actually answers, for labels and metrics. */
-export function answerModelId(modelId: string, live = false) {
-  if (live && hasOpenAI) {
-    return OPENAI_CHAT_MODEL;
-  }
+export function answerModelId(modelId: string) {
   if (useMock) {
     return "mock";
   }
   return modelId;
 }
 
-export function getLanguageModel(modelId: string, live = false) {
-  if (live && hasOpenAI) {
-    return openai(OPENAI_CHAT_MODEL);
-  }
+export function getLanguageModel(modelId: string) {
   if (useMock && myProvider) {
     return myProvider.languageModel("chat-model");
   }

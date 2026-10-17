@@ -4,7 +4,6 @@ import { openai } from "@ai-sdk/openai";
 import { generateText, Output } from "ai";
 import { z } from "zod";
 import { useMock } from "@/lib/ai/providers";
-import { fallbackTip } from "./fallback-tip";
 import {
   fixtureDecision,
   fixtureRubric,
@@ -75,11 +74,12 @@ const decisionSchema = z.object({
   whyRelevant: z.string().nullable(),
 });
 
-/** Never throws: any failure is silence (category "none"). `live` (the demo chip) uses the real observer even in mock mode. */
-export async function observe(
-  { userMessage, assistantReply, previousUserMessage }: CoachRequest,
-  { live = false }: { live?: boolean } = {}
-): Promise<CoachResponse> {
+/** Never throws: any failure is silence (category "none"). */
+export async function observe({
+  userMessage,
+  assistantReply,
+  previousUserMessage,
+}: CoachRequest): Promise<CoachResponse> {
   const simple = isSimple(userMessage);
   const sensitive = isSensitive(userMessage);
   if (simple || sensitive) {
@@ -91,7 +91,7 @@ export async function observe(
     };
   }
 
-  if (useMock && !(live && process.env.OPENAI_API_KEY)) {
+  if (useMock) {
     const decision = fixtureDecision({
       assistantReply,
       previousUserMessage,
@@ -125,10 +125,12 @@ export async function observe(
     // Schema already limits each score to an integer 0-2 or null.
     const rubric = output.rubric as Rubric;
     const strength = promptStrength(rubric, { blocked: output.answerBlocked });
-    // Weak/moderate always comes with a tip saying why; strong never does, so the two can't contradict.
-    const tipRequired = strength !== "strong";
-    const decision: CoachingDecision = tipRequired
-      ? output.category !== "none" && output.insight?.trim()
+    // The model is told a weak/moderate tier requires a tip; strong never gets one, so the two can't contradict.
+    // If it returns none anyway, show no tip rather than a canned one.
+    const decision: CoachingDecision =
+      strength !== "strong" &&
+      output.category !== "none" &&
+      output.insight?.trim()
         ? {
             assumedDetail: output.assumedDetail ?? undefined,
             category: output.category,
@@ -136,8 +138,7 @@ export async function observe(
             insight: clampInsight(output.insight),
             whyRelevant: output.whyRelevant ?? undefined,
           }
-        : fallbackTip(rubric, output.answerBlocked)
-      : NONE;
+        : NONE;
     return {
       decision,
       isSensitive: false,
