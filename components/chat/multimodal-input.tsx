@@ -70,6 +70,9 @@ function setCookie(name: string, value: string) {
   document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}`;
 }
 
+// Reverse Alignment: attachments and model picker hidden (one model, no uploads in the demo).
+const SHOW_INPUT_TOOLS = false as boolean;
+
 function PureMultimodalInput({
   chatId,
   input,
@@ -545,15 +548,19 @@ function PureMultimodalInput({
         />
         <PromptInputFooter className="px-3 pb-3">
           <PromptInputTools>
-            <AttachmentsButton
-              fileInputRef={fileInputRef}
-              selectedModelId={selectedModelId}
-              status={status}
-            />
-            <ModelSelectorCompact
-              onModelChange={onModelChange}
-              selectedModelId={selectedModelId}
-            />
+            {SHOW_INPUT_TOOLS ? (
+              <>
+                <AttachmentsButton
+                  fileInputRef={fileInputRef}
+                  selectedModelId={selectedModelId}
+                  status={status}
+                />
+                <ModelSelectorCompact
+                  onModelChange={onModelChange}
+                  selectedModelId={selectedModelId}
+                />
+              </>
+            ) : null}
           </PromptInputTools>
 
           {status === "submitted" ? (

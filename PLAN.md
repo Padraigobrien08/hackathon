@@ -33,7 +33,7 @@ Foundation: the Vercel AI Chatbot template (Next.js 16, AI SDK 7), calling Claud
 ### Where the template hooks in
 - **Send preferences:** `hooks/use-active-chat.tsx` → `prepareSendMessagesRequest` builds the request body; add `preferences` there, and to `postRequestBodySchema` in `schema.ts`.
 - **Trigger the coach:** `useChat({ onFinish })` in the same hook fires when the stream ends. Call `/api/coach` there with an ~8s `AbortController`.
-- **Render the card:** `components/chat/message.tsx`, under the assistant message, next to `MessageActions`. Never while `isLoading`.
+- **Render the card:** done. `components/chat/message.tsx` mounts `<MessageInsight messageId>` after the actions (not while `isLoading`). It reads tips from `CoachProvider` (`components/reverse-alignment/coach-provider.tsx`, mounted in `app/(chat)/layout.tsx` around `ActiveChatProvider`). M2: call `useCoach().setInsight(messageId, decision)` and `dispatch(...)` from `onFinish`; delete the `?mockcard=1` path in `message-insight.tsx`.
 - **System prompt:** `lib/ai/prompts.ts` (`regularPrompt` / `systemPrompt`).
 - **Mock mode:** `USE_MOCK=1` → `lib/ai/models.mock.ts`. The coach route must check `useMock` from `lib/ai/providers.ts` and return fixtures.
 
@@ -66,7 +66,7 @@ CoachingDecision = { category: "missing_context"|"assumption"|"verification"|"de
 | # | Milestone | Gate |
 |---|---|---|
 | M0 | ✅ Template running locally on Claude (mock by default); contract in `types.ts` | Guest chat streams an answer and saves to Postgres |
-| M1 | Parallel: S1 trim UI · S3 `/api/coach` with fixtures + real structured call · S4 reducer + policy · S6 static insight card | `/api/coach` curl returns valid JSON for 3 fixtures; card renders under a message |
+| M1 | ✅ Parallel: S1 trim UI · S3 `/api/coach` with fixtures + real structured call · S4 reducer + policy · S6 static insight card | `/api/coach` curl returns valid JSON for 3 fixtures; card renders under a message |
 | M2 | **End-to-end:** answer finishes → coach → card or nothing | Email → tip; "8 × 9" → none; `/api/coach` down → chat unaffected |
 | M3 | Feedback + settings | Got it / Don't show this kind / Fewer / Off each change the next turn |
 | M4 | Corrections → preference prompt → adaptation (S2 + S5) | 2× "shorter" → prompt → accept → new task is concise; Reset clears |
