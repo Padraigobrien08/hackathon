@@ -16,6 +16,19 @@ export type CoachingDecision = {
   assumedDetail?: string;
 };
 
+/** Rubric score per dimension: 2 clear, 1 missing but harmless, 0 missing and it hurt the answer, null n/a. See prompt_eval/Rubric.md §1. */
+export type RubricScore = 0 | 1 | 2 | null;
+export type Rubric = {
+  task: RubricScore;
+  context: RubricScore;
+  success_criteria: RubricScore;
+  efficiency: RubricScore;
+  evidence: string[]; // one short phrase per 0
+};
+
+/** User-facing label, derived in code from the rubric (never by the LLM). */
+export type PromptStrength = "weak" | "reasonable" | "strong";
+
 /** POST /api/coach — only the last exchange (minimum context). Call AFTER the answer finishes streaming. */
 export type CoachRequest = { userMessage: string; assistantReply: string };
 export type CoachResponse = {
@@ -23,6 +36,9 @@ export type CoachResponse = {
   isSimple: boolean;
   isSensitive: boolean;
   source: "llm" | "fixture"; // fixture = scripted; never present it as inferred
+  // Absent on simple/sensitive turns, mock mode, and observer failure: show no label then.
+  strength?: PromptStrength;
+  rubric?: Rubric; // for metrics/debugging; the UI shows strength, not raw scores
 };
 
 /** Only user-APPROVED styles. Sent with each chat request as `preferences`; the route adds them to the system prompt. */
