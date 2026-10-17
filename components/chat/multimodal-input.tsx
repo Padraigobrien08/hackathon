@@ -411,6 +411,30 @@ function PureMultimodalInput({
     setSlashOpen(false);
   }, []);
 
+  // Rate first (~1.5s). Weak: show one question instead of sending (returns true); the draft stays put.
+  // The send that follows reuses this rating for the bar, so nothing is rated twice.
+  const askBackFor = useCallback(
+    async (text: string) => {
+      if (!coachState.prefs.showStrength || isSimple(text)) {
+        return false;
+      }
+      const previousUser = messages.filter((m) => m.role === "user").at(-1);
+      setChecking(true);
+      const rating = await ratePromptText(
+        text,
+        previousUser ? getTextFromMessage(previousUser) : undefined
+      );
+      setChecking(false);
+      if (rating?.strength === "weak" && rating.question) {
+        setAskBack(rating.question);
+        textareaRef.current?.focus();
+        return true;
+      }
+      return false;
+    },
+    [coachState.prefs.showStrength, messages]
+  );
+
   const handlePromptSubmit = useCallback(async () => {
     if (input.startsWith("/")) {
       const query = input.slice(1).trim();
@@ -430,38 +454,51 @@ function PureMultimodalInput({
       toast.error("Please wait for the model to finish its response!");
       return;
     }
-    // Rate first (~1.5s). Weak: ask one question instead of sending; the draft stays in the box.
-    // The send below reuses this rating for the bar, so nothing is rated twice.
-    if (
-      coachState.prefs.showStrength &&
-      attachments.length === 0 &&
-      !isSimple(input)
-    ) {
-      const previousUser = messages.filter((m) => m.role === "user").at(-1);
-      setChecking(true);
-      const rating = await ratePromptText(
-        input,
-        previousUser ? getTextFromMessage(previousUser) : undefined
-      );
-      setChecking(false);
-      if (rating?.strength === "weak" && rating.question) {
-        setAskBack(rating.question);
-        textareaRef.current?.focus();
-        return;
-      }
+    if (attachments.length === 0 && (await askBackFor(input))) {
+      return;
     }
     setAskBack(null);
     submitForm();
   }, [
+    askBackFor,
     attachments.length,
     checking,
-    coachState.prefs.showStrength,
     handleSlashSelect,
     input,
-    messages,
     status,
     submitForm,
   ]);
+
+  // Example chips go through the same check as typed prompts, so the weak example asks back.
+  const handleSuggestion = useCallback(
+    async (text: string) => {
+      if (checking || !(status === "ready" || status === "error")) {
+        return;
+      }
+      setInput(text);
+      if (await askBackFor(text)) {
+        return;
+      }
+      setAskBack(null);
+      window.history.pushState(
+        {},
+        "",
+        `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/chat/${chatId}`
+      );
+      sendMessage({ parts: [{ text, type: "text" }], role: "user" });
+      setInput("");
+      setLocalStorageInput("");
+    },
+    [
+      askBackFor,
+      chatId,
+      checking,
+      sendMessage,
+      setInput,
+      setLocalStorageInput,
+      status,
+    ]
+  );
 
   const handleJustAnswer = useCallback(() => {
     setAskBack(null);
@@ -534,6 +571,7 @@ function PureMultimodalInput({
         uploadQueue.length === 0 && (
           <SuggestedActions
             chatId={chatId}
+            onSelect={handleSuggestion}
             onSent={clearDraft}
             selectedVisibilityType={selectedVisibilityType}
             sendMessage={sendMessage}

@@ -13,9 +13,16 @@ export const guestRegex = /^guest-\d+$/;
 export const DUMMY_PASSWORD = generateDummyPassword();
 
 // Reverse Alignment demo prompts (match the coach fixtures in lib/reverse-alignment/fixtures.ts).
+// One example per prompt tier. Each rated the same in 4/4 real-mode runs (and in mock mode).
+// Clicking one goes through the same pre-send check as typing it, so the weak one asks back.
 export const suggestions = [
-  "Help me write an email asking my manager for Friday off",
-  "Compare these two claims and tell me which is right",
-  "Make me a plan for launching our team newsletter",
-  "What's 8 × 9?",
-];
+  { text: "marketing plan", tier: "weak" },
+  {
+    text: "Help me write an email asking my manager for Friday off",
+    tier: "moderate",
+  },
+  {
+    text: "Explain how a mortgage works for a first-time buyer in the UK, in 5 bullet points",
+    tier: "strong",
+  },
+] as const;
