@@ -359,9 +359,9 @@ const PurePreviewMessage = ({
     <>
       {attachments}
       {parts}
+      {isUser && <PromptStrengthBadge messageId={message.id} />}
       {actions}
       {isAssistant && !isLoading && <MessageInsight messageId={message.id} />}
-      {isUser && <PromptStrengthBadge messageId={message.id} />}
     </>
   );
 
