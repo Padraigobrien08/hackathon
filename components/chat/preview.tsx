@@ -64,9 +64,9 @@ export function Preview() {
         <div className="grid w-full max-w-md grid-cols-2 gap-2">
           {suggestions.map((suggestion) => (
             <PreviewSuggestionButton
-              key={suggestion}
+              key={suggestion.text}
               onAction={handleAction}
-              suggestion={suggestion}
+              suggestion={suggestion.text}
             />
           ))}
         </div>
