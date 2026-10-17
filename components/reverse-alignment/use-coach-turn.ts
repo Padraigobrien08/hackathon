@@ -12,12 +12,78 @@ import {
   type CoachEvent,
   coachReducer,
 } from "@/lib/reverse-alignment/session-state";
-import { type CoachResponse, STYLE_KINDS } from "@/lib/reverse-alignment/types";
+import {
+  type CoachResponse,
+  type RateResponse,
+  STYLE_KINDS,
+} from "@/lib/reverse-alignment/types";
 import type { ChatMessage } from "@/lib/types";
 import { getTextFromMessage } from "@/lib/utils";
 import { useCoach } from "./coach-provider";
 
 const COACH_TIMEOUT_MS = 15_000; // above the observer's 12s server timeout
+const RATE_TIMEOUT_MS = 8000; // above the rater's 6s server timeout
+
+// Ratings started on send, by user message id, so the post-answer coach reuses the scores the user sees.
+// null = the rating failed or returned no tier.
+const ratings = new Map<string, Promise<RateResponse | null>>();
+
+/**
+ * Rates the latest user prompt as it is SENT, alongside the answer, so the bar can show before
+ * the answer finishes. Fire-and-forget: it never delays or blocks the chat request.
+ */
+export function usePromptRating() {
+  const { state, setStrength } = useCoach();
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  return useCallback(
+    (messages: ChatMessage[]) => {
+      const userMessages = messages.filter((m) => m.role === "user");
+      const userMessage = userMessages.at(-1);
+      const previousUserMessage = userMessages.at(-2);
+      const userText = userMessage ? getTextFromMessage(userMessage) : "";
+      if (
+        !(userMessage && stateRef.current.prefs.showStrength) ||
+        !userText.trim() ||
+        isSimple(userText)
+      ) {
+        return;
+      }
+      const { id } = userMessage;
+      setStrength(id, { scripted: false, strength: "pending" });
+      const rating = fetch(
+        `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api/coach/rate`,
+        {
+          body: JSON.stringify({
+            previousUserMessage: previousUserMessage
+              ? getTextFromMessage(previousUserMessage)
+              : undefined,
+            userMessage: userText,
+          }),
+          headers: { "Content-Type": "application/json" },
+          method: "POST",
+          signal: AbortSignal.timeout(RATE_TIMEOUT_MS),
+        }
+      )
+        .then((res) => (res.ok ? (res.json() as Promise<RateResponse>) : null))
+        .then((res) => (res?.strength ? res : null))
+        .catch(() => null);
+      ratings.set(id, rating);
+      rating.then((res) => {
+        setStrength(
+          id,
+          res?.strength && stateRef.current.prefs.showStrength
+            ? { scripted: res.source === "fixture", strength: res.strength }
+            : null
+        );
+      });
+    },
+    [setStrength]
+  );
+}
 
 // Fire-and-forget analytics (app/(chat)/api/prompt-metrics). Never awaited, never surfaces errors.
 function recordPromptMetric(
@@ -131,21 +197,18 @@ export function useCoachTurn(chatId: string) {
       const turn: CoachEvent = { isSimple: false, type: "TURN_COMPLETED" };
       dispatch(turn);
       const afterTurn = coachReducer(stateRef.current, turn);
-      // Gate 1: most turns stop here without calling the observer,
-      // unless the user opted in to a tier on every prompt.
-      if (
-        !(
-          preGate(afterTurn.prefs, afterTurn.signals) ||
-          afterTurn.prefs.showStrength
-        )
-      ) {
+      // The tier normally comes from the rating started on send. Only if that failed does the coach supply it.
+      const rated = userMessage
+        ? await (ratings.get(userMessage.id) ?? null)
+        : null;
+      const coachRates = afterTurn.prefs.showStrength && !rated;
+      // Gate 1: most turns stop here without calling the observer.
+      if (!(preGate(afterTurn.prefs, afterTurn.signals) || coachRates)) {
         return;
       }
 
-      // Placeholder bar while the coach rates the prompt; replaced by the tier, or removed if none comes back.
-      const ratingId = afterTurn.prefs.showStrength
-        ? userMessage?.id
-        : undefined;
+      // Fallback only: placeholder bar while the coach rates the prompt; replaced by the tier, or removed.
+      const ratingId = coachRates ? userMessage?.id : undefined;
       if (ratingId) {
         setStrength(ratingId, { scripted: false, strength: "pending" });
       }
@@ -158,6 +221,7 @@ export function useCoachTurn(chatId: string) {
             body: JSON.stringify({
               assistantReply: replyText,
               previousUserMessage: previousUserText,
+              rating: rated?.rubric,
               userMessage: userText,
             }),
             headers: { "Content-Type": "application/json" },

@@ -41,6 +41,8 @@ Stay silent with category "none" when the request is simple or conversational; t
 
 Before choosing a tip, score the user's prompt in rubric on four dimensions, each 2 (clear), 1 (missing but the answer was fine anyway), 0 (missing AND it visibly hurt the answer), or null (not applicable): task (principle 1), context (principle 2), success_criteria (principle 3), efficiency (principle 4). A 0 needs evidence from the answer: hedging across cases, a consequential guess, padding, or a mismatch with what the user clearly wanted. Put one short phrase per 0 in evidence; if you can't point to evidence, score 1. A tip is REQUIRED when any dimension scores 0 or two or more score 1: write it for the lowest-scored dimension, even if the topic is personal (the stay-silent rules above don't apply then). Otherwise prefer none. Score simple, casual exchanges fairly: a clear one-line request is 2 on task.
 
+If a <prompt_rating> is given, the prompt was already scored and the user can see that rating: copy its four scores into rubric unchanged (add evidence for each 0 from the answer if you can) and apply the tip rule above to those scores.
+
 Set answerBlocked to true only when the assistant could not attempt the task at all and its reply mainly asks the user for material they referred to but did not include (e.g. "these claims", "my code", "the article"). If it answered, even partially or with stated assumptions, set it to false.`;
 
 const score = z.number().int().min(0).max(2).nullable();
@@ -79,6 +81,7 @@ export async function observe({
   userMessage,
   assistantReply,
   previousUserMessage,
+  rating,
 }: CoachRequest): Promise<CoachResponse> {
   const simple = isSimple(userMessage);
   const sensitive = isSensitive(userMessage);
@@ -112,6 +115,9 @@ export async function observe({
     const previous = previousUserMessage
       ? `<previous_user_message>\n${previousUserMessage.slice(0, MAX_PREVIOUS_MESSAGE_CHARS)}\n</previous_user_message>\n\n`
       : "";
+    const shownRating = rating
+      ? `\n\n<prompt_rating>\ntask: ${rating.task}, context: ${rating.context}, success_criteria: ${rating.success_criteria}, efficiency: ${rating.efficiency}\n</prompt_rating>`
+      : "";
     const lengthHint = isLongInput(userMessage)
       ? `\n\nThe user's message is long (${userMessage.length} characters); consider whether most of it is relevant (efficiency).`
       : "";
@@ -120,16 +126,20 @@ export async function observe({
       instructions: OBSERVER_PROMPT,
       model: openai(OBSERVER_MODEL),
       output: Output.object({ schema: decisionSchema }),
-      prompt: `${previous}<user_request>\n${userMessage}\n</user_request>\n\n<assistant_answer>\n${assistantReply.slice(0, MAX_REPLY_CHARS)}\n</assistant_answer>${lengthHint}`,
+      prompt: `${previous}<user_request>\n${userMessage}\n</user_request>\n\n<assistant_answer>\n${assistantReply.slice(0, MAX_REPLY_CHARS)}\n</assistant_answer>${shownRating}${lengthHint}`,
       // "low" instead of the default "medium": ~1s faster with tiers as sensible on our eval cases.
       // "none" was 2x faster but rated strong prompts moderate. forceReasoning: the SDK would drop it otherwise.
       providerOptions: {
         openai: { forceReasoning: true, reasoningEffort: "low" },
       },
     });
-    // Schema already limits each score to an integer 0-2 or null.
-    const rubric = output.rubric as Rubric;
-    const strength = promptStrength(rubric, { blocked: output.answerBlocked });
+    // Schema already limits each score to an integer 0-2 or null. A rating shown on send wins, so tip and bar agree.
+    const rubric: Rubric = rating
+      ? { ...rating, evidence: output.rubric.evidence }
+      : (output.rubric as Rubric);
+    const strength = promptStrength(rubric, {
+      blocked: !rating && output.answerBlocked,
+    });
     // The model is told a weak/moderate tier requires a tip; strong never gets one, so the two can't contradict.
     // If it returns none anyway, show no tip rather than a canned one.
     const decision: CoachingDecision =

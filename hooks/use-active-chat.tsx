@@ -26,7 +26,10 @@ import {
   type StoredInsight,
   useCoach,
 } from "@/components/reverse-alignment/coach-provider";
-import { useCoachTurn } from "@/components/reverse-alignment/use-coach-turn";
+import {
+  useCoachTurn,
+  usePromptRating,
+} from "@/components/reverse-alignment/use-coach-turn";
 import { useAutoResume } from "@/hooks/use-auto-resume";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
 import type { Vote } from "@/lib/db/schema";
@@ -86,6 +89,12 @@ export function ActiveChatProvider({ children }: { children: ReactNode }) {
   }, [currentModelId]);
 
   const onCoachTurn = useCoachTurn(chatId);
+  // Rate the prompt as it's sent, alongside the answer. A ref, because the transport below is created once.
+  const ratePrompt = usePromptRating();
+  const ratePromptRef = useRef(ratePrompt);
+  useEffect(() => {
+    ratePromptRef.current = ratePrompt;
+  }, [ratePrompt]);
   // User-approved styles only. A ref, because the transport below is created once.
   const { state: coachState, replaceInsights } = useCoach();
   const { confirmedStyles } = coachState.prefs;
@@ -175,6 +184,10 @@ export function ActiveChatProvider({ children }: { children: ReactNode }) {
               );
             })
           );
+
+        if (!isToolApprovalContinuation) {
+          ratePromptRef.current(request.messages);
+        }
 
         return {
           body: {
