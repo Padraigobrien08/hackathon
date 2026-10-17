@@ -150,6 +150,14 @@ export function useCoachTurn(chatId: string) {
         return;
       }
 
+      // Placeholder bar while the coach rates the prompt; replaced by the tier, or removed if none comes back.
+      const ratingId = afterTurn.prefs.showStrength
+        ? userMessage?.id
+        : undefined;
+      if (ratingId) {
+        setStrength(ratingId, { scripted: false, strength: "pending" });
+      }
+
       let response: CoachResponse;
       try {
         const res = await fetch(
@@ -167,20 +175,28 @@ export function useCoachTurn(chatId: string) {
           }
         );
         if (!res.ok) {
-          return;
+          throw new Error(`coach ${res.status}`);
         }
         response = await res.json();
       } catch {
+        if (ratingId) {
+          setStrength(ratingId, null);
+        }
         return; // timeout or network: stay silent
       }
 
       // Gate 2, against the latest state (settings may have changed while we waited).
       const { prefs, signals } = stateRef.current;
-      if (userMessage && response.strength && prefs.showStrength) {
-        setStrength(userMessage.id, {
-          scripted: response.source === "fixture" || demo,
-          strength: response.strength,
-        });
+      if (ratingId) {
+        setStrength(
+          ratingId,
+          response.strength && prefs.showStrength
+            ? {
+                scripted: response.source === "fixture" || demo,
+                strength: response.strength,
+              }
+            : null
+        );
       }
       if (
         !shouldShowTip(response.decision, prefs, signals, response, { demo })
