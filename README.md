@@ -30,7 +30,7 @@ Open http://localhost:3000. You're signed in automatically as a guest. With `USE
 
 Already have the container? `docker start ra-postgres`. Port 3000 taken? `PORT=3001 pnpm dev`.
 
-## Turn on real Claude
+## Turn on real OpenAI answers
 
 In `.env.local`: `USE_MOCK=0` and `OPENAI_API_KEY=...`. Only the person with the key needs this.
 
