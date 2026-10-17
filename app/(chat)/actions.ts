@@ -4,6 +4,7 @@ import { generateText, type UIMessage } from "ai";
 import { cookies } from "next/headers";
 import { auth } from "@/app/(auth)/auth";
 import type { VisibilityType } from "@/components/chat/visibility-selector";
+import { conversationTitleFromText } from "@/lib/ai/conversation-title";
 import { titleModel } from "@/lib/ai/models";
 import { titlePrompt } from "@/lib/ai/prompts";
 import { getTitleModel } from "@/lib/ai/providers";
@@ -25,18 +26,22 @@ export async function generateTitleFromUserMessage({
 }: {
   message: UIMessage;
 }) {
+  const messageText = getTextFromMessage(message);
   const { text } = await generateText({
     instructions: titlePrompt,
     model: getTitleModel(),
-    prompt: getTextFromMessage(message),
+    prompt: messageText,
     providerOptions: {
       gateway: { order: titleModel.gatewayOrder },
     },
   });
-  return text
+  const generatedTitle = text
     .replace(/^[#*"\s]+/, "")
     .replace(/["]+$/, "")
     .trim();
+  return generatedTitle === "Test Conversation"
+    ? conversationTitleFromText(messageText)
+    : generatedTitle;
 }
 
 export async function deleteTrailingMessages({ id }: { id: string }) {

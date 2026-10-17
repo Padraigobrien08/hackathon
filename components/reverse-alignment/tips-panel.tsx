@@ -1,6 +1,5 @@
 "use client";
 
-import { LightbulbIcon } from "lucide-react";
 import { useCallback } from "react";
 import type { ChatMessage } from "@/lib/types";
 import { useCoach } from "./coach-provider";
@@ -28,17 +27,15 @@ export function TipsPanel({
   return (
     <aside
       aria-label="Tips"
-      className="hidden w-72 shrink-0 flex-col gap-3 overflow-y-auto border-border/40 border-l px-4 py-6 lg:flex"
+      className="hidden w-80 shrink-0 flex-col gap-4 overflow-y-auto border-border/40 border-l px-5 py-7 lg:flex"
       data-testid="tips-panel"
     >
-      <h2 className="flex items-center gap-1.5 font-medium text-[13px] text-muted-foreground">
-        <LightbulbIcon aria-hidden className="size-3.5" />
+      <h2 className="font-medium text-[11px] text-muted-foreground uppercase tracking-[0.14em]">
         Tips
       </h2>
       {withTips.length === 0 ? (
-        <p className="text-[12px] text-muted-foreground/70 leading-relaxed">
-          Most answers won't need one. If a small change to how you ask would
-          help, it shows up here.
+        <p className="max-w-56 text-[12px] text-muted-foreground/70 leading-relaxed">
+          Useful suggestions will appear here as you work.
         </p>
       ) : (
         withTips.map((m) => <TipsPanelItem key={m.id} messageId={m.id} />)
@@ -60,7 +57,7 @@ function TipsPanelItem({ messageId }: { messageId: string }) {
     return null;
   }
   return (
-    <div className="space-y-1">
+    <div>
       {offer ? (
         <PreferenceOfferCard messageId={messageId} />
       ) : stored ? (
@@ -68,16 +65,10 @@ function TipsPanelItem({ messageId }: { messageId: string }) {
           decision={stored.decision}
           onDismiss={onDismiss}
           onOpenSettings={openSettings}
+          onShowAnswer={showReply}
           scripted={stored.scripted}
         />
       ) : null}
-      <button
-        className="px-1 text-[11px] text-muted-foreground/70 hover:text-foreground"
-        onClick={showReply}
-        type="button"
-      >
-        Show the answer
-      </button>
     </div>
   );
 }
