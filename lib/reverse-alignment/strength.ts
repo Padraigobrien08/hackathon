@@ -1,7 +1,17 @@
 import type { PromptStrength, Rubric } from "./types";
 
-/** Derived in code so the same scores always give the same tier. Shared by the observer and fixtures. */
-export function promptStrength(rubric: Rubric): PromptStrength {
+/**
+ * Derived in code so the same scores always give the same tier. Shared by the observer and fixtures.
+ * `blocked`: the reply couldn't attempt the task and had to ask for missing material, so the prompt
+ * is weak however the dimensions scored (one fatal gap otherwise only counts as "moderate").
+ */
+export function promptStrength(
+  rubric: Rubric,
+  { blocked = false }: { blocked?: boolean } = {}
+): PromptStrength {
+  if (blocked) {
+    return "weak";
+  }
   const scores = [
     rubric.task,
     rubric.context,

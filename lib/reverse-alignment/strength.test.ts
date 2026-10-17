@@ -42,6 +42,15 @@ test("two gaps that hurt the answer are weak", () => {
   );
 });
 
+test("a reply that had to ask for missing material makes the prompt weak", () => {
+  // "Compare these two claims" with no claims: one fatal gap, otherwise "moderate".
+  assert.equal(
+    promptStrength(rubric({ context: 0 }), { blocked: true }),
+    "weak"
+  );
+  assert.equal(promptStrength(rubric({}), { blocked: true }), "weak");
+});
+
 test("n/a dimensions are ignored", () => {
   assert.equal(promptStrength(rubric({ efficiency: null })), "strong");
 });
