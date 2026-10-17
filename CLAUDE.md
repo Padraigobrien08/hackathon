@@ -18,7 +18,7 @@
 ## Rules
 - The API contract lives in BOTH `main.py` (Pydantic) and `api.ts` (TS types). Change them together, in the same commit.
 - Every new LLM feature must keep working in mock mode, so teammates without a key aren't blocked.
-- Three people work on `main` in parallel: keep changes small and inside the files your task needs.
+- Three people work on `main` in parallel: keep changes small and inside the files your task needs. Use `/sync` to commit, pull and push.
 - After a change, verify it: curl the endpoint and/or check it in the browser. Don't say done without checking.
 - After 15:00 (feature freeze): bug fixes and demo polish only.
 - Speed over ceremony today: only show a plan first for multi-feature work; otherwise just build and report.
