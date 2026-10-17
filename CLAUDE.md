@@ -26,7 +26,6 @@ Product: a normal AI chat that answers first and occasionally offers ONE optiona
 - Env lives in `.env.local` (copy `.env.example`): `AUTH_SECRET`, `POSTGRES_URL`, `USE_MOCK`, `OPENAI_API_KEY`. Never commit `.env.local`.
 - **Mock mode:** `USE_MOCK=1` (default) serves `lib/ai/models.mock.ts` via `useMock` in `lib/ai/providers.ts`. Every LLM feature, including the coach, must keep working with `USE_MOCK=1` so teammates without a key aren't blocked.
 - **Real mode:** `USE_MOCK=0` with `OPENAI_API_KEY` set uses OpenAI (`gpt-6-luna`) for chat, titles and the coach (`lib/ai/providers.ts`). There is no Anthropic path.
-- **Live demo chip:** the "Make me a plan for launching our team newsletter" suggestion (`lib/reverse-alignment/live.ts`, tagged "live") sends `live: true`, so that chat's answers and coach calls use real OpenAI (`gpt-6-luna`) even with `USE_MOCK=1`. Needs `OPENAI_API_KEY` in `.env.local`; without it the chip silently stays mocked. Real observer calls take 5–7s (timeouts: 12s server, 15s client).
 - The template's tools (artifacts, weather, suggestions) are off: `getCapabilities()` reports `tools: false`, so answers stay in the chat. Model selector, attachments, visibility selector and Vercel links are hidden in the UI.
 - Guest message cap raised to 500/hour in `lib/ai/entitlements.ts` (template default 10/hour blocks demo rehearsals). Lower it before any public deploy.
 - Fallback: if auth/DB breaks and costs more than ~30 min, run an unauthenticated session per the spec; don't debug infra all day.

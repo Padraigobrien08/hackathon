@@ -5,7 +5,6 @@ import {
   type ReactNode,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -24,14 +23,14 @@ import { CollaborationSettings } from "./collaboration-settings";
 
 export type StoredInsight = {
   decision: CoachingDecision;
-  /** Fixture or ?demo=1: the card says "demo" so scripted tips are never passed off as inferred. */
+  /** Mock-mode fixture: the card says "demo" so scripted tips are never passed off as inferred. */
   scripted: boolean;
 };
 
 export type StoredStrength = {
   /** "pending" while the coach is still rating the prompt: shown as a placeholder bar. */
   strength: PromptStrength | "pending";
-  /** Fixture or ?demo=1, as for tips. */
+  /** Mock-mode fixture, as for tips. */
   scripted: boolean;
 };
 
@@ -52,15 +51,12 @@ type CoachContextValue = {
   strengths: ReadonlyMap<string, StoredStrength>;
   /** null removes it (e.g. the coach failed or returned no tier). */
   setStrength: (messageId: string, strength: StoredStrength | null) => void;
-  /** ?demo=1: skip the cooldown (scripted demo; shown with a badge). */
-  demo: boolean;
   /** "How I'm helping" panel, opened from the tip card or the sidebar menu. */
   settingsOpen: boolean;
   setSettingsOpen: (open: boolean) => void;
 };
 
 const CoachContext = createContext<CoachContextValue | null>(null);
-const DEMO_KEY = "reverse-alignment:demo";
 
 export function CoachProvider({ children }: { children: ReactNode }) {
   const { state, dispatch } = useCoachState();
@@ -76,22 +72,7 @@ export function CoachProvider({ children }: { children: ReactNode }) {
   const [strengths, setStrengths] = useState<Map<string, StoredStrength>>(
     () => new Map()
   );
-  const [demo, setDemo] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-
-  useEffect(() => {
-    // Read in an effect so server and first client render match. Kept for the browser tab
-    // (chat URLs drop the query string), so a reload mid-demo stays in demo mode; ?demo=0 clears it.
-    const param = new URLSearchParams(window.location.search).get("demo");
-    try {
-      if (param !== null) {
-        window.sessionStorage.setItem(DEMO_KEY, param === "0" ? "0" : "1");
-      }
-      setDemo(window.sessionStorage.getItem(DEMO_KEY) === "1");
-    } catch {
-      setDemo(param !== null && param !== "0");
-    }
-  }, []);
 
   const setInsight = useCallback(
     (messageId: string, insight: StoredInsight | null) => {
@@ -143,7 +124,6 @@ export function CoachProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       adaptations,
-      demo,
       dispatch,
       insights,
       offers,
@@ -159,7 +139,6 @@ export function CoachProvider({ children }: { children: ReactNode }) {
     }),
     [
       adaptations,
-      demo,
       dispatch,
       insights,
       offers,
@@ -178,11 +157,6 @@ export function CoachProvider({ children }: { children: ReactNode }) {
     <CoachContext.Provider value={value}>
       {children}
       <CollaborationSettings />
-      {demo ? (
-        <div className="pointer-events-none fixed top-3 right-3 z-50 lg:top-auto lg:bottom-3 rounded-md bg-muted px-2 py-1 text-[11px] text-muted-foreground ring-1 ring-border/60">
-          Demo mode: tip cooldown off
-        </div>
-      ) : null}
     </CoachContext.Provider>
   );
 }

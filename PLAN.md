@@ -25,7 +25,7 @@ Foundation: the Vercel AI Chatbot template (Next.js 16, AI SDK 7), calling OpenA
 | S4 | Policy + learning state: preGate, shouldShowTip, reducer, localStorage | Dev 3 | `lib/reverse-alignment/{policy,session-state}.ts` |
 | S5 | Correction detection → preference prompt → adaptation | Dev 3 | `lib/reverse-alignment/preference-detector.ts` |
 | S6 | Coaching UI: insight card, preference prompt, "How I'm helping" settings; trigger coach on finish | Dev 1 | `components/reverse-alignment/*`, `components/chat/message.tsx`, `hooks/use-active-chat.tsx` |
-| S7 | Demo script, `?demo=1` override, P0 checks, backup video | All (after 14:30) | — |
+| S7 | Demo script, P0 checks, backup video | All (after 14:30) | — |
 
 **Hotspots (one owner each):** `components/chat/message.tsx` + `hooks/use-active-chat.tsx` → Dev 1.
 `app/(chat)/api/chat/*` + `lib/ai/*` → Dev 2. `lib/reverse-alignment/types.ts` is the shared contract: change only after telling the team.
@@ -33,7 +33,7 @@ Foundation: the Vercel AI Chatbot template (Next.js 16, AI SDK 7), calling OpenA
 ### Where the template hooks in
 - **Send preferences:** `hooks/use-active-chat.tsx` → `prepareSendMessagesRequest` builds the request body; add `preferences` there, and to `postRequestBodySchema` in `schema.ts`.
 - **Trigger the coach:** done. `onFinish` in `hooks/use-active-chat.tsx` calls `useCoachTurn()` (`components/reverse-alignment/use-coach-turn.ts`): isSimple → TURN_COMPLETED → preGate → `/api/coach` (8s timeout) → shouldShowTip → `setInsight` + TIP_SHOWN.
-- **Render the card:** done. `components/chat/message.tsx` mounts `<MessageInsight messageId>` after the actions (not while `isLoading`). It reads tips from `CoachProvider` (`components/reverse-alignment/coach-provider.tsx`, mounted in `app/(chat)/layout.tsx` around `ActiveChatProvider`). Tips are stored as `{ decision, scripted }`; scripted (fixture or `?demo=1`) tips show a "demo" label.
+- **Render the card:** done. `components/chat/message.tsx` mounts `<MessageInsight messageId>` after the actions (not while `isLoading`). It reads tips from `CoachProvider` (`components/reverse-alignment/coach-provider.tsx`, mounted in `app/(chat)/layout.tsx` around `ActiveChatProvider`). Tips are stored as `{ decision, scripted }`; scripted (mock-mode fixture) tips show a "demo" label.
 - **System prompt:** `lib/ai/prompts.ts` (`regularPrompt` / `systemPrompt`).
 - **Mock mode:** `USE_MOCK=1` → `lib/ai/models.mock.ts`. The coach route must check `useMock` from `lib/ai/providers.ts` and return fixtures.
 
@@ -59,7 +59,7 @@ CoachingDecision = { category: "missing_context"|"assumption"|"verification"|"de
 - **Confidence is a knob, not truth.** The real guard is the observer prompt preferring `none`, plus deterministic isSimple/isSensitive checks before any model call.
 - **One card per turn.** A preference prompt suppresses any tip on that turn.
 - **Observer failure = silence.** Abort after ~8s; the route returns `none` on any error.
-- **Honest fixtures.** Fixture decisions carry `source: "fixture"` and the card says "demo". `?demo=1` skips the cooldown, shows a "Demo mode" badge, and stays on for the browser tab until `?demo=0`.
+- **Honest fixtures.** Fixture decisions carry `source: "fixture"` and the card says "demo". (Mock mode only.) The demo runs in real mode: no `?demo=1`, no scripted tips, no canned fallbacks; tips come only from the real observer.
 - **Never:** forced rewrites, withheld answers, a tip after every message. No scores or grades, with one deliberate exception below.
 - **Prompt tier (on by default, decided 2026-10-17).** "Rate my prompts" in How I'm helping (on by default; users can turn it off) shows weak / moderate / strong under each user prompt. The observer scores task, context, success criteria and efficiency 0–2; `promptStrength()` (`lib/reverse-alignment/strength.ts`) derives the tier in code. A tip needs a dimension scored 0. Raw scores are never shown; no tier on simple/sensitive turns. With it on, the observer runs every non-simple turn (cost: one call per prompt), so being on by default means one observer call per non-simple prompt for everyone.
 
@@ -78,7 +78,7 @@ CoachingDecision = { category: "missing_context"|"assumption"|"verification"|"de
 **Cut list:** artifacts/documents, weather tool, file uploads, model selector, login/register UI, retrospective view (spec P2), RL / learner models.
 
 **Biggest risk:** observer over-triggers or gives generic tips (feels like a grader).
-**Fallback:** fixtures + `?demo=1` guarantee the demo path, labelled honestly.
+**Fallback:** mock mode (`USE_MOCK=1`) with fixtures, labelled "demo". The demo itself is real mode only.
 
 ## Demo fixtures (mock mode)
 

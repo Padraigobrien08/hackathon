@@ -9,8 +9,6 @@ import {
 // Illustrative guardrails (spec §6), not validated thresholds.
 export const MIN_CONFIDENCE = 0.8;
 
-export type GateOptions = { demo?: boolean }; // ?demo=1: skip the cooldown (shown with a visible badge)
-
 export function cooldownFor(prefs: CoachingPreferences) {
   return prefs.frequency === "low" ? COOLDOWN.low : COOLDOWN.normal;
 }
@@ -19,15 +17,11 @@ export function cooldownFor(prefs: CoachingPreferences) {
  * Gate 1, BEFORE calling the observer: most turns stop here and cost no model call.
  * Simple turns are filtered even earlier (isSimple on the client) and never reach this.
  */
-export function preGate(
-  prefs: CoachingPreferences,
-  signals: LearningSignals,
-  options: GateOptions = {}
-) {
+export function preGate(prefs: CoachingPreferences, signals: LearningSignals) {
   if (!prefs.enabled || prefs.frequency === "off") {
     return false;
   }
-  return options.demo || signals.turnsSinceLastTip >= cooldownFor(prefs);
+  return signals.turnsSinceLastTip >= cooldownFor(prefs);
 }
 
 /** Gate 2, on the observer's decision (spec §6 shouldShowTip). */
@@ -39,10 +33,9 @@ export function shouldShowTip(
     isSensitive: boolean;
     isSimple: boolean;
     strength?: PromptStrength;
-  },
-  options: GateOptions = {}
+  }
 ) {
-  if (!preGate(prefs, signals, options)) {
+  if (!preGate(prefs, signals)) {
     return false;
   }
   if (context.isSensitive || context.isSimple) {

@@ -135,17 +135,6 @@ test("coaching off / fewer tips take effect immediately", () => {
   });
   assert.equal(preGate(low.prefs, low.signals), false); // needs 5 turns, starts at 3
 });
-
-test("demo override skips the cooldown but not the off switch", () => {
-  const s = coachReducer(INITIAL_STATE, {
-    category: "assumption",
-    type: "TIP_SHOWN",
-  });
-  assert.equal(preGate(s.prefs, s.signals, { demo: true }), true);
-  const off = coachReducer(s, { frequency: "off", type: "SET_FREQUENCY" });
-  assert.equal(preGate(off.prefs, off.signals, { demo: true }), false);
-});
-
 test("reset clears signals and preferences", () => {
   let s = coachReducer(INITIAL_STATE, {
     frequency: "low",
