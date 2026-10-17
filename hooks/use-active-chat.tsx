@@ -9,6 +9,7 @@ import {
   type Dispatch,
   type ReactNode,
   type SetStateAction,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -114,7 +115,7 @@ export function ActiveChatProvider({ children }: { children: ReactNode }) {
   const {
     messages,
     setMessages,
-    sendMessage,
+    sendMessage: sendMessageUnguarded,
     status,
     stop,
     regenerate,
@@ -257,6 +258,23 @@ export function ActiveChatProvider({ children }: { children: ReactNode }) {
       }
     }
   }, [chatData, isNewChat]);
+
+  // Drop sends while a response is in flight: overlapping requests make the AI SDK
+  // throw "reading 'state'" in its finally block and skip onFinish (so no coach tip).
+  const statusRef = useRef(status);
+  statusRef.current = status;
+  const sendMessage = useCallback<typeof sendMessageUnguarded>(
+    (...args) => {
+      if (
+        statusRef.current === "submitted" ||
+        statusRef.current === "streaming"
+      ) {
+        return Promise.resolve();
+      }
+      return sendMessageUnguarded(...args);
+    },
+    [sendMessageUnguarded]
+  );
 
   const hasAppendedQueryRef = useRef(false);
   useEffect(() => {
