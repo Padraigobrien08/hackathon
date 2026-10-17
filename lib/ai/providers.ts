@@ -1,4 +1,5 @@
 import { anthropic } from "@ai-sdk/anthropic";
+import { openai } from "@ai-sdk/openai";
 import { customProvider } from "ai";
 import { isTestEnvironment } from "../constants";
 import { titleModel } from "./models";
@@ -22,7 +23,13 @@ export const myProvider = useMock
     })()
   : null;
 
-export function getLanguageModel(modelId: string) {
+// The live demo chip (lib/reverse-alignment/live.ts) answers with a real model, even in mock mode.
+const LIVE_CHAT_MODEL = "gpt-6-luna";
+
+export function getLanguageModel(modelId: string, live = false) {
+  if (live && process.env.OPENAI_API_KEY) {
+    return openai(LIVE_CHAT_MODEL);
+  }
   if (useMock && myProvider) {
     return myProvider.languageModel("chat-model");
   }

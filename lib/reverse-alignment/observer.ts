@@ -22,7 +22,7 @@ import type {
 
 // Small, fast model: this runs after every eligible answer.
 const OBSERVER_MODEL = "gpt-6-luna"; // needs OPENAI_API_KEY
-const OBSERVER_TIMEOUT_MS = 6000;
+const OBSERVER_TIMEOUT_MS = 12_000; // real calls take 5-7s; this runs after the answer, so it never delays it
 const MAX_REPLY_CHARS = 4000;
 const MAX_PREVIOUS_MESSAGE_CHARS = 1000;
 
@@ -70,12 +70,11 @@ const decisionSchema = z.object({
   whyRelevant: z.string().nullable(),
 });
 
-/** Never throws: any failure is silence (category "none"). */
-export async function observe({
-  userMessage,
-  assistantReply,
-  previousUserMessage,
-}: CoachRequest): Promise<CoachResponse> {
+/** Never throws: any failure is silence (category "none"). `live` (the demo chip) uses the real observer even in mock mode. */
+export async function observe(
+  { userMessage, assistantReply, previousUserMessage }: CoachRequest,
+  { live = false }: { live?: boolean } = {}
+): Promise<CoachResponse> {
   const simple = isSimple(userMessage);
   const sensitive = isSensitive(userMessage);
   if (simple || sensitive) {
@@ -87,7 +86,7 @@ export async function observe({
     };
   }
 
-  if (useMock) {
+  if (useMock && !(live && process.env.OPENAI_API_KEY)) {
     const decision = fixtureDecision({
       assistantReply,
       previousUserMessage,
