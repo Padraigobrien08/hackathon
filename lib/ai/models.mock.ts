@@ -1,4 +1,5 @@
 import type { LanguageModel } from "ai";
+import { CONCISE_PREFERENCE_PROMPT } from "./prompts";
 
 const mockResponses: Record<string, string> = {
   compare:
@@ -10,8 +11,31 @@ const mockResponses: Record<string, string> = {
   math: "8 × 9 = 72.",
   newsletter:
     "Here's a simple launch plan:\n\n1. **Goal and audience:** decide who it's for and what they should get from it.\n2. **Format:** pick a cadence (e.g. fortnightly) and 3–4 recurring sections.\n3. **First issue:** gather content a week ahead and get one person to review it.\n4. **Launch:** announce it in your team channel and ask for feedback after issue one.\n5. **Iterate:** check open rates and replies after three issues and adjust.",
+  shorter:
+    "Sure, shorter: **Subject:** Friday off. Hi [Manager's name], could I take this Friday, [date], off? Work is on track and I'll hand over anything urgent. Thanks, [Your name]",
   weather: "The weather in San Francisco is sunny and 72°F.",
 };
+
+// What the mock says when the user approved short answers (the system prompt carries CONCISE_PREFERENCE_PROMPT).
+const conciseResponses: Record<string, string> = {
+  compare:
+    "Paste the two claims and I'll say which is better supported, and what can't be verified.",
+  email:
+    "**Subject:** Friday off. Hi [Manager's name], could I take this Friday, [date], off? Work is on track and I'll hand over anything urgent. Thanks, [Your name]",
+  newsletter:
+    "Pick your audience and a fortnightly cadence, draft issue one a week early, and announce it in your team channel. Review what's working after three issues.",
+};
+
+function wantsConcise(prompt: unknown): boolean {
+  return (
+    Array.isArray(prompt) &&
+    prompt.some(
+      (message: { role?: string; content?: unknown }) =>
+        message?.role === "system" &&
+        String(message.content).includes(CONCISE_PREFERENCE_PROMPT)
+    )
+  );
+}
 const mockUsage = {
   inputTokens: { cacheRead: 0, cacheWrite: 0, noCache: 10, total: 10 },
   outputTokens: { reasoning: 0, text: 20, total: 20 },
@@ -33,28 +57,38 @@ function lastUserText(prompt: unknown): string {
 }
 
 function getResponseForPrompt(prompt: unknown): string {
-  const promptStr = lastUserText(prompt).toLowerCase();
+  const key = getResponseKey(lastUserText(prompt).toLowerCase());
+  return (
+    (wantsConcise(prompt) ? conciseResponses[key] : undefined) ??
+    mockResponses[key]
+  );
+}
+
+function getResponseKey(promptStr: string): string {
+  if (/\b(shorter|too long|more concise|briefer|tl;?dr)\b/.test(promptStr)) {
+    return "shorter";
+  }
 
   if (promptStr.includes("weather") || promptStr.includes("temperature")) {
-    return mockResponses.weather;
+    return "weather";
   }
   if (promptStr.includes("email") || promptStr.includes("friday off")) {
-    return mockResponses.email;
+    return "email";
   }
   if (promptStr.includes("compare") || promptStr.includes("claims")) {
-    return mockResponses.compare;
+    return "compare";
   }
   if (promptStr.includes("newsletter") || promptStr.includes("plan")) {
-    return mockResponses.newsletter;
+    return "newsletter";
   }
   if (/8\s*[×x*]\s*9/.test(promptStr)) {
-    return mockResponses.math;
+    return "math";
   }
   if (/\b(hello|hi|hey)\b/.test(promptStr)) {
-    return mockResponses.greeting;
+    return "greeting";
   }
 
-  return mockResponses.default;
+  return "default";
 }
 
 const createMockModel = (): LanguageModel =>
