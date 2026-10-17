@@ -2,7 +2,7 @@
 
 This is the reference the coach uses to judge a user's prompt. Each principle below lists what it is, how to spot when it is missing, an example, and the kind of tip the coach could give.
 
-The coach answers first and gives **at most one** tip, only when fixing it would clearly have improved the answer. If nothing is clearly missing, the coach says nothing. It never gives a score or a grade.
+The coach answers first and gives tips, only when fixing it would clearly have improved the answer. If nothing is clearly missing, the coach says nothing. It never gives a score or a grade.
 
 ---
 
