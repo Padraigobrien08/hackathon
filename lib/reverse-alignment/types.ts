@@ -19,6 +19,19 @@ export type CoachingDecision = {
   assumedDetail?: string;
 };
 
+/** Rubric score per dimension: 2 clear, 1 missing but harmless, 0 missing and it hurt the answer, null n/a. */
+export type RubricScore = 0 | 1 | 2 | null;
+export type Rubric = {
+  task: RubricScore;
+  context: RubricScore;
+  success_criteria: RubricScore;
+  efficiency: RubricScore;
+  evidence: string[]; // one short phrase per 0
+};
+
+/** User-facing tier, derived in code from the rubric (never by the LLM). Opt-in: see showStrength. */
+export type PromptStrength = "weak" | "moderate" | "strong";
+
 /** POST /api/coach — the last exchange plus optional prior request. Call AFTER the answer finishes streaming. */
 export type CoachRequest = {
   userMessage: string;
@@ -30,6 +43,9 @@ export type CoachResponse = {
   isSimple: boolean;
   isSensitive: boolean;
   source: "llm" | "fixture"; // fixture = scripted; never present it as inferred
+  // Absent on simple/sensitive turns, unmatched mock turns, and observer failure: show no tier then.
+  strength?: PromptStrength;
+  rubric?: Rubric; // for metrics/debugging; the UI shows strength, not raw scores
 };
 
 /** Answer styles the user can teach by correcting answers. Each maps to fixed prompt text, never user input. */
@@ -53,6 +69,8 @@ export type CoachingPreferences = {
   enabled: boolean;
   frequency: "off" | "low" | "normal";
   showAssumptions: boolean;
+  /** Show a weak/moderate/strong tier on each prompt. Off by default. */
+  showStrength: boolean;
   confirmedStyles: ConfirmedStyles;
 };
 
@@ -72,6 +90,7 @@ export const DEFAULT_PREFERENCES: CoachingPreferences = {
   enabled: true,
   frequency: "normal",
   showAssumptions: true,
+  showStrength: false,
 };
 
 export const DEFAULT_SIGNALS: LearningSignals = {

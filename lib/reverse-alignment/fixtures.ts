@@ -1,5 +1,10 @@
 import { detectCorrection } from "./preference-detector";
-import type { CoachingDecision, CoachRequest } from "./types";
+import type {
+  CoachingCategory,
+  CoachingDecision,
+  CoachRequest,
+  Rubric,
+} from "./types";
 
 // Deterministic checks that run before any model call, in mock AND real mode.
 const SENSITIVE =
@@ -133,4 +138,64 @@ export function fixtureDecision(request: CoachRequest): CoachingDecision {
     EXISTING_FIXTURES.find(([pattern]) => pattern.test(userMessage))?.[1] ??
     NONE
   );
+}
+
+const CLEAR: Rubric = {
+  context: 2,
+  efficiency: 2,
+  evidence: [],
+  success_criteria: 2,
+  task: 2,
+};
+
+// Scripted rubric per demo tip, so mock mode shows all three tiers (weak / moderate / strong).
+const FIXTURE_RUBRICS: Partial<Record<CoachingCategory, Rubric>> = {
+  assumption: {
+    ...CLEAR,
+    context: 0,
+    evidence: ["I had to guess the tone and the reason."],
+    success_criteria: 1,
+  },
+  efficiency: {
+    ...CLEAR,
+    efficiency: 0,
+    evidence: ["Most of the paste wasn't needed for the question."],
+  },
+  missing_context: {
+    ...CLEAR,
+    context: 0,
+    evidence: ["I had to guess details I couldn't see."],
+  },
+  success_criteria: {
+    ...CLEAR,
+    evidence: ["No length or format was given."],
+    success_criteria: 0,
+  },
+  unclear_task: {
+    ...CLEAR,
+    context: 1,
+    evidence: ["Only a topic, no action."],
+    success_criteria: 1,
+    task: 0,
+  },
+  verification: {
+    ...CLEAR,
+    context: 0,
+    evidence: [
+      "The claims weren't included, so I compared them in general terms.",
+      "A factual comparison with no request to check the sources.",
+    ],
+    success_criteria: 0,
+  },
+};
+
+/** Mock-mode rubric for a fixture decision. No scripted match = no rubric, so no tier is shown. */
+export function fixtureRubric(
+  userMessage: string,
+  decision: CoachingDecision
+): Rubric | undefined {
+  if (decision.category === "none") {
+    return EXPLICIT_SUCCESS_CRITERIA.test(userMessage) ? CLEAR : undefined;
+  }
+  return FIXTURE_RUBRICS[decision.category];
 }

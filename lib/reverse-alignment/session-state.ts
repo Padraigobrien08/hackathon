@@ -25,6 +25,7 @@ export type CoachEvent =
   | { type: "SET_FREQUENCY"; frequency: CoachingPreferences["frequency"] }
   | { type: "SET_ENABLED"; enabled: boolean }
   | { type: "SET_SHOW_ASSUMPTIONS"; showAssumptions: boolean }
+  | { type: "SET_SHOW_STRENGTH"; showStrength: boolean }
   | { type: "CORRECTION_SEEN"; kind: CorrectionKind; text: string; at: number }
   | { type: "PREFERENCE_ACCEPTED"; kind: CorrectionKind }
   | { type: "PREFERENCE_DECLINED"; kind: CorrectionKind } // count restarts: may ask again, never every turn
@@ -114,6 +115,11 @@ export function coachReducer(state: CoachState, event: CoachEvent): CoachState {
       return {
         ...state,
         prefs: { ...prefs, showAssumptions: event.showAssumptions },
+      };
+    case "SET_SHOW_STRENGTH":
+      return {
+        ...state,
+        prefs: { ...prefs, showStrength: event.showStrength },
       };
     case "CORRECTION_SEEN":
       return {

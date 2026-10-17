@@ -45,8 +45,15 @@ type FinishInfo = {
  * and nothing here can delay or break the answer itself.
  */
 export function useCoachTurn() {
-  const { state, dispatch, setInsight, setOffer, setAdaptation, demo } =
-    useCoach();
+  const {
+    state,
+    dispatch,
+    setInsight,
+    setOffer,
+    setAdaptation,
+    setStrength,
+    demo,
+  } = useCoach();
   // onFinish is registered once by useChat, so read the latest coach state through a ref.
   const stateRef = useRef(state);
   useEffect(() => {
@@ -110,8 +117,14 @@ export function useCoachTurn() {
       const turn: CoachEvent = { isSimple: false, type: "TURN_COMPLETED" };
       dispatch(turn);
       const afterTurn = coachReducer(stateRef.current, turn);
-      // Gate 1: most turns stop here without calling the observer.
-      if (!preGate(afterTurn.prefs, afterTurn.signals, { demo })) {
+      // Gate 1: most turns stop here without calling the observer,
+      // unless the user opted in to a tier on every prompt.
+      if (
+        !(
+          preGate(afterTurn.prefs, afterTurn.signals, { demo }) ||
+          afterTurn.prefs.showStrength
+        )
+      ) {
         return;
       }
 
@@ -140,6 +153,12 @@ export function useCoachTurn() {
 
       // Gate 2, against the latest state (settings may have changed while we waited).
       const { prefs, signals } = stateRef.current;
+      if (userMessage && response.strength && prefs.showStrength) {
+        setStrength(userMessage.id, {
+          scripted: response.source === "fixture" || demo,
+          strength: response.strength,
+        });
+      }
       if (
         !shouldShowTip(response.decision, prefs, signals, response, { demo })
       ) {
@@ -151,6 +170,6 @@ export function useCoachTurn() {
       });
       dispatch({ category: response.decision.category, type: "TIP_SHOWN" });
     },
-    [demo, dispatch, setAdaptation, setInsight, setOffer]
+    [demo, dispatch, setAdaptation, setInsight, setOffer, setStrength]
   );
 }

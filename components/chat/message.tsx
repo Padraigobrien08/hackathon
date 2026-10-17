@@ -2,6 +2,7 @@
 import type { UseChatHelpers } from "@ai-sdk/react";
 import { useCallback } from "react";
 import { MessageInsight } from "@/components/reverse-alignment/message-insight";
+import { PromptStrengthBadge } from "@/components/reverse-alignment/prompt-strength-badge";
 import type { Vote } from "@/lib/db/schema";
 import type { ChatMessage } from "@/lib/types";
 import { cn, sanitizeText } from "@/lib/utils";
@@ -360,6 +361,7 @@ const PurePreviewMessage = ({
       {parts}
       {actions}
       {isAssistant && !isLoading && <MessageInsight messageId={message.id} />}
+      {isUser && <PromptStrengthBadge messageId={message.id} />}
     </>
   );
 

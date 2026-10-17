@@ -17,6 +17,7 @@ import {
 } from "@/lib/reverse-alignment/session-state";
 import type {
   CoachingDecision,
+  PromptStrength,
   StyleKind,
 } from "@/lib/reverse-alignment/types";
 import { CollaborationSettings } from "./collaboration-settings";
@@ -24,6 +25,12 @@ import { CollaborationSettings } from "./collaboration-settings";
 export type StoredInsight = {
   decision: CoachingDecision;
   /** Fixture or ?demo=1: the card says "demo" so scripted tips are never passed off as inferred. */
+  scripted: boolean;
+};
+
+export type StoredStrength = {
+  strength: PromptStrength;
+  /** Fixture or ?demo=1, as for tips. */
   scripted: boolean;
 };
 
@@ -39,6 +46,9 @@ type CoachContextValue = {
   /** Remembered styles each assistant message was written with. Browser-only, this page only. */
   adaptations: ReadonlyMap<string, StyleKind[]>;
   setAdaptation: (messageId: string, styles: StyleKind[]) => void;
+  /** Prompt tiers by USER message id. Browser-only; shown only while prefs.showStrength is on. */
+  strengths: ReadonlyMap<string, StoredStrength>;
+  setStrength: (messageId: string, strength: StoredStrength) => void;
   /** ?demo=1: skip the cooldown (scripted demo; shown with a badge). */
   demo: boolean;
   /** "How I'm helping" panel, opened from the tip card or the sidebar menu. */
@@ -58,6 +68,9 @@ export function CoachProvider({ children }: { children: ReactNode }) {
     () => new Map()
   );
   const [adaptations, setAdaptations] = useState<Map<string, StyleKind[]>>(
+    () => new Map()
+  );
+  const [strengths, setStrengths] = useState<Map<string, StoredStrength>>(
     () => new Map()
   );
   const [demo, setDemo] = useState(false);
@@ -98,6 +111,13 @@ export function CoachProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const setStrength = useCallback(
+    (messageId: string, strength: StoredStrength) => {
+      setStrengths((prev) => new Map(prev).set(messageId, strength));
+    },
+    []
+  );
+
   const value = useMemo(
     () => ({
       adaptations,
@@ -109,8 +129,10 @@ export function CoachProvider({ children }: { children: ReactNode }) {
       setInsight,
       setOffer,
       setSettingsOpen,
+      setStrength,
       settingsOpen,
       state,
+      strengths,
     }),
     [
       adaptations,
@@ -121,8 +143,10 @@ export function CoachProvider({ children }: { children: ReactNode }) {
       setAdaptation,
       setInsight,
       setOffer,
+      setStrength,
       settingsOpen,
       state,
+      strengths,
     ]
   );
 

@@ -42,7 +42,8 @@ Foundation: the Vercel AI Chatbot template (Next.js 16, AI SDK 7), calling Claud
 ```ts
 POST /api/coach      // last exchange only: minimum context
   req:  { userMessage, assistantReply }
-  res:  { decision: CoachingDecision, isSimple, isSensitive, source: "llm" | "fixture" }
+  res:  { decision: CoachingDecision, isSimple, isSensitive, source: "llm" | "fixture",
+          strength?: "weak" | "moderate" | "strong", rubric? }   // tier shown only if prefs.showStrength
 
 POST /api/chat       // template's existing body, plus:
   preferences?: { concise?: boolean, technicalDetail?: "low" | "normal" | "high" }   // user-APPROVED only
@@ -59,7 +60,8 @@ CoachingDecision = { category: "missing_context"|"assumption"|"verification"|"de
 - **One card per turn.** A preference prompt suppresses any tip on that turn.
 - **Observer failure = silence.** Abort after ~8s; the route returns `none` on any error.
 - **Honest fixtures.** Fixture decisions carry `source: "fixture"` and the card says "demo". `?demo=1` skips the cooldown, shows a "Demo mode" badge, and stays on for the browser tab until `?demo=0`.
-- **Never:** scores, grades, forced rewrites, withheld answers, a tip after every message.
+- **Never:** forced rewrites, withheld answers, a tip after every message. No scores or grades, with one deliberate exception below.
+- **Prompt tier (opt-in, decided 2026-10-17).** "Rate my prompts" in How I'm helping (off by default) shows weak / moderate / strong under each user prompt. The observer scores task, context, success criteria and efficiency 0–2; `promptStrength()` (`lib/reverse-alignment/strength.ts`) derives the tier in code. A tip needs a dimension scored 0. Raw scores are never shown; no tier on simple/sensitive turns. With it on, the observer runs every non-simple turn (cost: one call per prompt).
 
 ## Milestones (hacking 10:00–16:00, freeze 15:00)
 
