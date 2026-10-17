@@ -7,7 +7,7 @@ import { InsightCard } from "./insight-card";
 
 /** Mounted under every finished assistant message; renders a tip only if one was decided for it. */
 export function MessageInsight({ messageId }: { messageId: string }) {
-  const { insights, setInsight, dispatch } = useCoach();
+  const { insights, setInsight, dispatch, setSettingsOpen } = useCoach();
   const stored = insights.get(messageId);
 
   const onDismiss = useCallback(
@@ -25,6 +25,11 @@ export function MessageInsight({ messageId }: { messageId: string }) {
     [stored, dispatch, messageId, setInsight]
   );
 
+  const openSettings = useCallback(
+    () => setSettingsOpen(true),
+    [setSettingsOpen]
+  );
+
   if (!stored) {
     return null; // no tip for this message, or it was dismissed (null)
   }
@@ -32,6 +37,7 @@ export function MessageInsight({ messageId }: { messageId: string }) {
     <InsightCard
       decision={stored.decision}
       onDismiss={onDismiss}
+      onOpenSettings={openSettings}
       scripted={stored.scripted}
     />
   );

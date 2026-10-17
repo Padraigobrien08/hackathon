@@ -20,6 +20,7 @@ export type CoachEvent =
   | { type: "TURN_COMPLETED"; isSimple: boolean } // dispatch BEFORE preGate for the turn
   | { type: "TIP_SHOWN"; category: CoachingCategory }
   | { type: "TIP_DISMISSED"; category: CoachingCategory; kind: DismissKind }
+  | { type: "UNDISMISS_CATEGORY"; category: CoachingCategory } // "Show again" in settings
   | { type: "SET_FREQUENCY"; frequency: CoachingPreferences["frequency"] }
   | { type: "SET_ENABLED"; enabled: boolean }
   | { type: "SET_SHOW_ASSUMPTIONS"; showAssumptions: boolean }
@@ -89,6 +90,16 @@ export function coachReducer(state: CoachState, event: CoachEvent): CoachState {
         };
       }
       return state;
+    case "UNDISMISS_CATEGORY":
+      return {
+        ...state,
+        signals: {
+          ...signals,
+          dismissedCategories: signals.dismissedCategories.filter(
+            (category) => category !== event.category
+          ),
+        },
+      };
     case "SET_FREQUENCY":
       return { ...state, prefs: { ...prefs, frequency: event.frequency } };
     case "SET_ENABLED":

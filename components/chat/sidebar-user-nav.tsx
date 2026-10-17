@@ -6,6 +6,7 @@ import type { User } from "next-auth";
 import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { useCallback } from "react";
+import { useCoach } from "@/components/reverse-alignment/coach-provider";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +37,11 @@ export function SidebarUserNav({ user }: { user: User }) {
   const { setTheme, resolvedTheme } = useTheme();
 
   const isGuest = guestRegex.test(data?.user?.email ?? "");
+  const { setSettingsOpen } = useCoach();
+  const handleCoachSettingsSelect = useCallback(
+    () => setSettingsOpen(true),
+    [setSettingsOpen]
+  );
   const handleThemeSelect = useCallback(() => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
   }, [resolvedTheme, setTheme]);
@@ -99,6 +105,13 @@ export function SidebarUserNav({ user }: { user: User }) {
             data-testid="user-nav-menu"
             side="top"
           >
+            <DropdownMenuItem
+              className="cursor-pointer text-[13px]"
+              data-testid="user-nav-item-coach-settings"
+              onSelect={handleCoachSettingsSelect}
+            >
+              How I'm helping
+            </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer text-[13px]"
               data-testid="user-nav-item-theme"

@@ -26,6 +26,7 @@ Product: a normal AI chat that answers first and occasionally offers ONE optiona
 - Env lives in `.env.local` (copy `.env.example`): `AUTH_SECRET`, `POSTGRES_URL`, `USE_MOCK`, `ANTHROPIC_API_KEY`. Never commit `.env.local`.
 - **Mock mode:** `USE_MOCK=1` (default) serves `lib/ai/models.mock.ts` via `useMock` in `lib/ai/providers.ts`. Every LLM feature, including the coach, must keep working with `USE_MOCK=1` so teammates without a key aren't blocked.
 - The template's tools (artifacts, weather, suggestions) are off: `getCapabilities()` reports `tools: false`, so answers stay in the chat. Model selector, attachments, visibility selector and Vercel links are hidden in the UI.
+- Guest message cap raised to 500/hour in `lib/ai/entitlements.ts` (template default 10/hour blocks demo rehearsals). Lower it before any public deploy.
 - Fallback: if auth/DB breaks and costs more than ~30 min, run an unauthenticated session per the spec; don't debug infra all day.
 
 ## Rules

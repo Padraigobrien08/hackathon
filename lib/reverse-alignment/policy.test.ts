@@ -142,3 +142,58 @@ test("reset clears signals and preferences", () => {
   });
   assert.deepEqual(coachReducer(s, { type: "RESET" }), INITIAL_STATE);
 });
+
+test("show again: an un-hidden category can be shown", () => {
+  let s = coachReducer(INITIAL_STATE, {
+    category: "assumption",
+    kind: "not_this_kind",
+    type: "TIP_DISMISSED",
+  });
+  s = coachReducer(s, { category: "assumption", type: "UNDISMISS_CATEGORY" });
+  assert.deepEqual(s.signals.dismissedCategories, []);
+  s = coachReducer(s, { isSimple: false, type: "TURN_COMPLETED" });
+  assert.equal(shouldShowTip(tip, s.prefs, s.signals, plain), true);
+});
+
+test("fewer tips: five eligible turns between tips instead of three", () => {
+  let s = coachReducer(INITIAL_STATE, {
+    frequency: "low",
+    type: "SET_FREQUENCY",
+  });
+  s = coachReducer(s, { category: "assumption", type: "TIP_SHOWN" });
+  const shown: boolean[] = [];
+  for (let turn = 0; turn < 5; turn += 1) {
+    s = coachReducer(s, { isSimple: false, type: "TURN_COMPLETED" });
+    shown.push(preGate(s.prefs, s.signals));
+  }
+  assert.deepEqual(shown, [false, false, false, false, true]);
+});
+
+test("switching back to normal from off resumes tips", () => {
+  let s = coachReducer(INITIAL_STATE, {
+    frequency: "off",
+    type: "SET_FREQUENCY",
+  });
+  s = coachReducer(s, { isSimple: false, type: "TURN_COMPLETED" });
+  assert.equal(preGate(s.prefs, s.signals), false);
+  s = coachReducer(s, { frequency: "normal", type: "SET_FREQUENCY" });
+  assert.equal(preGate(s.prefs, s.signals), true);
+});
+
+test("assumption tips can be switched off on their own", () => {
+  let s = coachReducer(INITIAL_STATE, {
+    showAssumptions: false,
+    type: "SET_SHOW_ASSUMPTIONS",
+  });
+  s = coachReducer(s, { isSimple: false, type: "TURN_COMPLETED" });
+  assert.equal(shouldShowTip(tip, s.prefs, s.signals, plain), false);
+  assert.equal(
+    shouldShowTip(
+      { ...tip, category: "verification" },
+      s.prefs,
+      s.signals,
+      plain
+    ),
+    true
+  );
+});

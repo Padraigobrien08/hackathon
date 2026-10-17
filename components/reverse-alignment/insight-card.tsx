@@ -9,12 +9,18 @@ import type { CoachingDecision } from "@/lib/reverse-alignment/types";
 type Props = {
   decision: CoachingDecision;
   onDismiss: (kind: DismissKind) => void;
+  onOpenSettings: () => void;
   /** Scripted (fixture/demo) tip: say so on the card. */
   scripted?: boolean;
 };
 
 /** A quiet, optional tip under a finished answer. Never a grade, never blocking. */
-export function InsightCard({ decision, onDismiss, scripted }: Props) {
+export function InsightCard({
+  decision,
+  onDismiss,
+  onOpenSettings,
+  scripted,
+}: Props) {
   const gotIt = useCallback(() => onDismiss("got_it"), [onDismiss]);
   const notThisKind = useCallback(
     () => onDismiss("not_this_kind"),
@@ -51,6 +57,9 @@ export function InsightCard({ decision, onDismiss, scripted }: Props) {
           </Button>
           <Button onClick={notThisKind} size="xs" variant="ghost">
             Don't show tips like this
+          </Button>
+          <Button onClick={onOpenSettings} size="xs" variant="ghost">
+            Settings
           </Button>
         </div>
       </div>

@@ -68,7 +68,7 @@ CoachingDecision = { category: "missing_context"|"assumption"|"verification"|"de
 | M0 | ✅ Template running locally on Claude (mock by default); contract in `types.ts` | Guest chat streams an answer and saves to Postgres |
 | M1 | ✅ Parallel: S1 trim UI · S3 `/api/coach` with fixtures + real structured call · S4 reducer + policy · S6 static insight card | `/api/coach` curl returns valid JSON for 3 fixtures; card renders under a message |
 | M2 | ✅ **End-to-end:** answer finishes → coach → card or nothing | Email → tip; "8 × 9" → none; `/api/coach` down → chat unaffected |
-| M3 | Feedback + settings | Got it / Don't show this kind / Fewer / Off each change the next turn |
+| M3 | ✅ Feedback + settings ("How I'm helping" panel: card Settings button + sidebar user menu) | Got it / Don't show this kind / Fewer / Off each change the next turn |
 | M4 | Corrections → preference prompt → adaptation (S2 + S5) | 2× "shorter" → prompt → accept → new task is concise; Reset clears |
 | M5 | Tone tuning, abstention checks, fade (stretch). **15:00 FREEZE** | P0 list (spec §11) passes by hand |
 | M6 | Demo rehearsal ×3, backup video, pitch | 3-min script runs clean in mock and real mode |

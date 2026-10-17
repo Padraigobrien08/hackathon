@@ -15,6 +15,7 @@ import {
   useCoachState,
 } from "@/lib/reverse-alignment/session-state";
 import type { CoachingDecision } from "@/lib/reverse-alignment/types";
+import { CollaborationSettings } from "./collaboration-settings";
 
 export type StoredInsight = {
   decision: CoachingDecision;
@@ -30,6 +31,9 @@ type CoachContextValue = {
   setInsight: (messageId: string, insight: StoredInsight | null) => void;
   /** ?demo=1: skip the cooldown (scripted demo; shown with a badge). */
   demo: boolean;
+  /** "How I'm helping" panel, opened from the tip card or the sidebar menu. */
+  settingsOpen: boolean;
+  setSettingsOpen: (open: boolean) => void;
 };
 
 const CoachContext = createContext<CoachContextValue | null>(null);
@@ -41,6 +45,7 @@ export function CoachProvider({ children }: { children: ReactNode }) {
     () => new Map()
   );
   const [demo, setDemo] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     // Read in an effect so server and first client render match. Kept for the browser tab
@@ -64,13 +69,22 @@ export function CoachProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ demo, dispatch, insights, setInsight, state }),
-    [demo, dispatch, insights, setInsight, state]
+    () => ({
+      demo,
+      dispatch,
+      insights,
+      setInsight,
+      setSettingsOpen,
+      settingsOpen,
+      state,
+    }),
+    [demo, dispatch, insights, setInsight, settingsOpen, state]
   );
 
   return (
     <CoachContext.Provider value={value}>
       {children}
+      <CollaborationSettings />
       {demo ? (
         <div className="pointer-events-none fixed top-3 right-3 z-50 rounded-md bg-muted px-2 py-1 text-[11px] text-muted-foreground ring-1 ring-border/60">
           Demo mode: tip cooldown off
