@@ -32,7 +32,7 @@ Product: a normal AI chat that answers first and occasionally offers ONE optiona
 ## Rules
 - **The coach never blocks the answer.** It runs after the stream finishes (separate `/api/coach` call). If it fails or times out, the chat is unaffected and shows nothing.
 - Shared contracts live in `lib/reverse-alignment/types.ts` (one file, used by route and UI). Change it only after telling the team.
-- No scores, grades, forced rewrites, or a tip after every message. Silence is the default outcome. One deliberate exception: the opt-in weak/moderate/strong prompt tier (off by default; see PLAN.md "Prompt tier").
+- No scores, grades, forced rewrites, or a tip after every message. Silence is the default outcome. One deliberate exception: the weak/moderate/strong prompt tier (on by default, user can turn it off; see PLAN.md "Prompt tier").
 - Fixture/scripted coaching is labelled (`source: "fixture"`); never present it as inferred.
 - Three people work on `main` in parallel: stay inside the files your task needs. `components/chat/message.tsx` and the chat route are hotspots: one owner each (see `PLAN.md`). Use `/sync` to commit, pull and push.
 - After a change, verify it: typecheck, curl the route and/or check it in the browser. Don't say done without checking.

@@ -61,7 +61,7 @@ CoachingDecision = { category: "missing_context"|"assumption"|"verification"|"de
 - **Observer failure = silence.** Abort after ~8s; the route returns `none` on any error.
 - **Honest fixtures.** Fixture decisions carry `source: "fixture"` and the card says "demo". `?demo=1` skips the cooldown, shows a "Demo mode" badge, and stays on for the browser tab until `?demo=0`.
 - **Never:** forced rewrites, withheld answers, a tip after every message. No scores or grades, with one deliberate exception below.
-- **Prompt tier (opt-in, decided 2026-10-17).** "Rate my prompts" in How I'm helping (off by default) shows weak / moderate / strong under each user prompt. The observer scores task, context, success criteria and efficiency 0–2; `promptStrength()` (`lib/reverse-alignment/strength.ts`) derives the tier in code. A tip needs a dimension scored 0. Raw scores are never shown; no tier on simple/sensitive turns. With it on, the observer runs every non-simple turn (cost: one call per prompt).
+- **Prompt tier (on by default, decided 2026-10-17).** "Rate my prompts" in How I'm helping (on by default; users can turn it off) shows weak / moderate / strong under each user prompt. The observer scores task, context, success criteria and efficiency 0–2; `promptStrength()` (`lib/reverse-alignment/strength.ts`) derives the tier in code. A tip needs a dimension scored 0. Raw scores are never shown; no tier on simple/sensitive turns. With it on, the observer runs every non-simple turn (cost: one call per prompt), so being on by default means one observer call per non-simple prompt for everyone.
 
 ## Milestones (hacking 10:00–16:00, freeze 15:00)
 
