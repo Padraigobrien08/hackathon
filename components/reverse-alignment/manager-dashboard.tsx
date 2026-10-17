@@ -13,18 +13,18 @@ import { cn } from "@/lib/utils";
 
 // Chart colours: validated ordinal blue ramp (dataviz reference palette), same steps in light and dark.
 const VIZ_STYLE = `
-.ra-viz { --series-1: #2a78d6; --q-weak: #86b6ef; --q-reasonable: #3987e5; --q-strong: #1c5cab;
+.ra-viz { --series-1: #2a78d6; --q-weak: #86b6ef; --q-moderate: #3987e5; --q-strong: #1c5cab;
   --ord-1: #86b6ef; --ord-2: #5598e7; --ord-3: #2a78d6; --ord-4: #1c5cab; --grid: #e1e0d9; --baseline: #c3c2b7; }
 .dark .ra-viz { --series-1: #3987e5; --grid: #2c2c2a; --baseline: #383835; }
 `;
 
 const QUALITY_COLOR: Record<QualityClass, string> = {
-  reasonable: "var(--q-reasonable)",
+  moderate: "var(--q-moderate)",
   strong: "var(--q-strong)",
   weak: "var(--q-weak)",
 };
 const QUALITY_LABEL: Record<QualityClass, string> = {
-  reasonable: "Reasonable",
+  moderate: "Moderate",
   strong: "Strong",
   weak: "Weak",
 };
@@ -323,7 +323,7 @@ function Empty({ children }: { children: React.ReactNode }) {
   return <p className="text-muted-foreground text-sm">{children}</p>;
 }
 
-// Weak | Reasonable | Strong track with a marker at the average (score 0–2).
+// Weak | Moderate | Strong track with a marker at the average (score 0–2).
 function QualityScale({
   score,
   compact = false,
@@ -360,7 +360,7 @@ function QualityScale({
       {compact ? null : (
         <div className="grid grid-cols-3 text-muted-foreground text-xs">
           <span>Weak</span>
-          <span className="text-center">Reasonable</span>
+          <span className="text-center">Moderate</span>
           <span className="text-right">Strong</span>
         </div>
       )}
@@ -384,7 +384,7 @@ function Legend() {
   );
 }
 
-// One 100% bar: strong | reasonable | weak, with direct labels underneath.
+// One 100% bar: strong | moderate | weak, with direct labels underneath.
 function QualityMix({
   distribution,
 }: {

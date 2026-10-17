@@ -138,11 +138,11 @@ export function sampleMetricRows(now = new Date()): MetricRow[] {
           const q = rand();
           let quality: QualityClass;
           if (gateDecision === "needs_more") {
-            quality = q < 0.8 ? "weak" : "reasonable";
+            quality = q < 0.8 ? "weak" : "moderate";
           } else if (q < skill - 0.15) {
             quality = "strong";
           } else {
-            quality = q > skill + 0.45 ? "weak" : "reasonable";
+            quality = q > skill + 0.45 ? "weak" : "moderate";
           }
           const promptTokens = between(style.promptTokens);
           // a "needs more" reply is a short clarifying question

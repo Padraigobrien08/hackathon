@@ -13,7 +13,7 @@ import { sampleMetricRows } from "./dashboard-fixtures";
 // Below this many real prompts the charts are empty, so default to the (labelled) sample set.
 const MIN_LIVE_ROWS = 30;
 
-// Contract with the prompt evaluator: PromptMetric.evaluation = { quality: "strong" | "reasonable" | "weak", ... }
+// Contract with the prompt evaluator: PromptMetric.evaluation = { quality: "strong" | "moderate" | "weak", ... }
 const qualityOf = (evaluation: unknown): QualityClass | null => {
   const quality = (evaluation as { quality?: unknown } | null)?.quality;
   return QUALITY_CLASSES.includes(quality as QualityClass)

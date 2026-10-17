@@ -1,11 +1,18 @@
 // Manager dashboard: contract + aggregation over PromptMetric rows. Pure functions, used by the page and /api/dashboard.
 // Kept out of types.ts so the shared coach contract stays untouched.
 
-export const QUALITY_CLASSES = ["weak", "reasonable", "strong"] as const;
-export type QualityClass = (typeof QUALITY_CLASSES)[number];
-// weak = 0, reasonable = 1, strong = 2; the average is placed on this 0–2 scale.
+import type { PromptStrength } from "./types";
+
+// Same tiers as the coach's prompt strength (types.ts), so evaluator output plugs straight in.
+export type QualityClass = PromptStrength;
+export const QUALITY_CLASSES: readonly QualityClass[] = [
+  "weak",
+  "moderate",
+  "strong",
+];
+// weak = 0, moderate = 1, strong = 2; the average is placed on this 0–2 scale.
 const QUALITY_SCORE: Record<QualityClass, number> = {
-  reasonable: 1,
+  moderate: 1,
   strong: 2,
   weak: 0,
 };
@@ -99,7 +106,7 @@ export function classForScore(score: number): QualityClass {
   if (score < 2 / 3) {
     return "weak";
   }
-  return score < 4 / 3 ? "reasonable" : "strong";
+  return score < 4 / 3 ? "moderate" : "strong";
 }
 
 function qualityStats(rows: MetricRow[]): QualitySummary {
