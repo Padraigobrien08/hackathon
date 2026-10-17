@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftIcon, InfoIcon } from "lucide-react";
+import { ArrowLeftIcon } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useState } from "react";
 import {
@@ -59,11 +59,7 @@ const shortDate = (iso: string) =>
 const GATE_PENDING = "Waiting for the worth-responding check";
 const EVALUATOR_PENDING = "Waiting for the prompt evaluator";
 
-export function ManagerDashboard({
-  data,
-}: {
-  data: DashboardData & { liveRows: number };
-}) {
+export function ManagerDashboard({ data }: { data: DashboardData }) {
   const { totals, gate, quality } = data;
   const pricingName = PRICING_MODEL.replace("gpt-6-", "GPT-6 ").replace(
     /\b\w/g,
@@ -91,20 +87,10 @@ export function ManagerDashboard({
               the AI has to ask for more, and what vague prompts cost.
             </p>
           </div>
-          <DataToggle liveRows={data.liveRows} source={data.source} />
+          <span className="text-muted-foreground text-sm">
+            Last {num(totals.days, 0)} days · {num(totals.people, 0)} people
+          </span>
         </header>
-
-        {data.source === "sample" ? (
-          <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm">
-            <InfoIcon className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
-            <span>
-              <strong className="font-medium">Sample data.</strong> Six
-              fictional people over 14 days, including mock quality classes
-              until the prompt evaluator is connected. Switch to Live once real
-              prompts have been recorded ({data.liveRows} so far).
-            </span>
-          </div>
-        ) : null}
 
         <section className="grid gap-3 lg:grid-cols-3">
           <Card
@@ -131,7 +117,7 @@ export function ManagerDashboard({
             )}
           </Card>
           <Card
-            subtitle="Spend on prompts the AI had to ask about before it could answer"
+            subtitle={`Spend on prompts the AI had to ask about before it could answer, last ${num(totals.days, 0)} days`}
             title="Cost of vague prompts"
           >
             {gate.vaguePromptSpendUsd === null ? (
@@ -153,6 +139,7 @@ export function ManagerDashboard({
                       />
                     </div>
                     <span className="text-muted-foreground text-sm">
+                      {usd(gate.vaguePromptSpendUsd / totals.days)} a day.{" "}
                       {pct(gate.vaguePromptShare)} of all spend went on prompts
                       that needed clarifying first
                     </span>
@@ -234,41 +221,6 @@ export function ManagerDashboard({
         </Card>
       </div>
     </div>
-  );
-}
-
-function DataToggle({
-  source,
-  liveRows,
-}: {
-  source: DashboardData["source"];
-  liveRows: number;
-}) {
-  const options = [
-    { href: "/dashboard?data=sample", key: "sample", label: "Sample" },
-    { href: "/dashboard?data=live", key: "live", label: `Live (${liveRows})` },
-  ] as const;
-  return (
-    <nav
-      aria-label="Data set"
-      className="flex w-fit rounded-lg border border-border bg-card p-0.5 text-sm"
-    >
-      {options.map((o) => (
-        <Link
-          aria-current={source === o.key ? "page" : undefined}
-          className={cn(
-            "rounded-md px-3 py-1 transition-colors",
-            source === o.key
-              ? "bg-muted font-medium text-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-          href={o.href}
-          key={o.key}
-        >
-          {o.label}
-        </Link>
-      ))}
-    </nav>
   );
 }
 
