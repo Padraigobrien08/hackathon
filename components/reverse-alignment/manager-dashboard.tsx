@@ -10,6 +10,7 @@ import {
 } from "@/lib/reverse-alignment/dashboard";
 import { PRICING_MODEL } from "@/lib/reverse-alignment/pricing";
 import { cn } from "@/lib/utils";
+import { BrandLogo } from "./brand-logo";
 
 // Chart colours: validated ordinal blue ramp (dataviz reference palette), same steps in light and dark.
 const VIZ_STYLE = `
@@ -72,13 +73,16 @@ export function ManagerDashboard({ data }: { data: DashboardData }) {
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 md:px-8">
         <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="flex flex-col gap-2">
-            <Link
-              className="flex w-fit items-center gap-1.5 text-muted-foreground text-sm transition-colors hover:text-foreground"
-              href="/"
-            >
-              <ArrowLeftIcon className="size-4" />
-              Back to chat
-            </Link>
+            <div className="flex items-center gap-6">
+              <BrandLogo size={28} />
+              <Link
+                className="flex w-fit items-center gap-1.5 text-muted-foreground text-sm transition-colors hover:text-foreground"
+                href="/"
+              >
+                <ArrowLeftIcon className="size-4" />
+                Back to chat
+              </Link>
+            </div>
             <h1 className="font-semibold text-2xl tracking-tight">
               Prompting overview
             </h1>

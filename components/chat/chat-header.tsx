@@ -1,12 +1,15 @@
 "use client";
 
-import { PanelLeftIcon } from "lucide-react";
+import { BarChart3Icon, PanelLeftIcon } from "lucide-react";
+import Link from "next/link";
 import { memo } from "react";
+import { BrandLogo } from "@/components/reverse-alignment/brand-logo";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import type { VisibilityType } from "./visibility-selector";
 
 // Props kept for the memo comparison below; the visibility selector is hidden for the demo.
+// Always rendered (also with the sidebar collapsed) so the dashboard button stays top right.
 function PureChatHeader({
   chatId: _chatId,
   selectedVisibilityType: _selectedVisibilityType,
@@ -16,11 +19,7 @@ function PureChatHeader({
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
 }) {
-  const { state, toggleSidebar, isMobile } = useSidebar();
-
-  if (state === "collapsed" && !isMobile) {
-    return null;
-  }
+  const { toggleSidebar } = useSidebar();
 
   return (
     <header className="sticky top-0 flex h-14 items-center gap-2 bg-sidebar px-3">
@@ -33,7 +32,20 @@ function PureChatHeader({
         <PanelLeftIcon className="size-4" />
       </Button>
 
-      <span className="font-medium text-sm">Reverse Alignment</span>
+      {/* desktop shows the logo in the sidebar; mobile has no sidebar, so show it here */}
+      <BrandLogo className="md:hidden" size={28} />
+
+      <Button
+        asChild
+        className="ml-auto gap-1.5 border-primary/40 hover:bg-primary/10"
+        size="sm"
+        variant="outline"
+      >
+        <Link href="/dashboard">
+          <BarChart3Icon className="size-4 text-primary" />
+          Dashboard
+        </Link>
+      </Button>
     </header>
   );
 }

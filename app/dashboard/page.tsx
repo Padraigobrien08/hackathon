@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { ManagerDashboard } from "@/components/reverse-alignment/manager-dashboard";
 import { loadDashboard } from "@/lib/reverse-alignment/dashboard-data";
 
-export const metadata = { title: "Prompting overview · Reverse Alignment" };
+export const metadata = { title: "Prompting overview · PromptFlip" };
 
 // Outside the (chat) group so the chat shell doesn't render behind it.
 export default function DashboardPage() {
