@@ -163,7 +163,7 @@ function Section({
   );
 }
 
-/** "How I'm helping": coaching controls. Shows settings only, never scores or counts. */
+/** "How I'm helping": coaching controls. The only score is the opt-in prompt tier, shown on messages, not here. */
 export function CollaborationSettings() {
   const { state, dispatch, settingsOpen, setSettingsOpen } = useCoach();
   const { prefs, signals } = state;
@@ -179,6 +179,11 @@ export function CollaborationSettings() {
         showAssumptions: value === "on",
         type: "SET_SHOW_ASSUMPTIONS",
       }),
+    [dispatch]
+  );
+  const setShowStrength = useCallback(
+    (value: "on" | "off") =>
+      dispatch({ showStrength: value === "on", type: "SET_SHOW_STRENGTH" }),
     [dispatch]
   );
   const reset = useCallback(() => {
@@ -228,6 +233,21 @@ export function CollaborationSettings() {
               options={ON_OFF_OPTIONS}
               value={prefs.showAssumptions ? "on" : "off"}
             />
+          </Section>
+
+          <Section title="Rate my prompts">
+            <Segmented
+              label="Rate my prompts"
+              onChange={setShowStrength}
+              options={ON_OFF_OPTIONS}
+              value={prefs.showStrength ? "on" : "off"}
+            />
+            <p>
+              Shows weak, moderate or strong under each prompt, based on whether
+              it says what you want done, gives the context I need, says what a
+              good answer looks like, and stays focused. Answers are the same
+              either way.
+            </p>
           </Section>
 
           <Section title="Hidden tip types">

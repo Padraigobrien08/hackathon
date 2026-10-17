@@ -1,25 +1,32 @@
 import "server-only";
 
-import { anthropic } from "@ai-sdk/anthropic";
+import { openai } from "@ai-sdk/openai";
 import { generateText, Output } from "ai";
 import { z } from "zod";
 import { useMock } from "@/lib/ai/providers";
 import {
   fixtureDecision,
+  fixtureRubric,
   isLongInput,
   isSensitive,
   isSimple,
   NONE,
 } from "./fixtures";
-import type { CoachRequest, CoachResponse } from "./types";
+import { promptStrength } from "./strength";
+import type {
+  CoachingDecision,
+  CoachRequest,
+  CoachResponse,
+  Rubric,
+} from "./types";
 
 // Small, fast model: this runs after every eligible answer.
-const OBSERVER_MODEL = "claude-haiku-5-5";
+const OBSERVER_MODEL = "gpt-6-luna"; // needs OPENAI_API_KEY
 const OBSERVER_TIMEOUT_MS = 6000;
 const MAX_REPLY_CHARS = 4000;
 const MAX_PREVIOUS_MESSAGE_CHARS = 1000;
 
-const OBSERVER_PROMPT = `You are a nonjudgmental, passive collaboration coach. The assistant has already answered. Decide whether one brief, specific insight would clearly improve the user's future AI interactions. Prefer "none". Never critique or grade the user, call a prompt weak, ask for a rewrite, or treat prompt length as competence. If useful, return one optional insight of at most 180 characters that is specific to this request, never generic advice. Confidence is how sure the tip is useful (0-1), never a judgement of the user.
+const OBSERVER_PROMPT = `You are a nonjudgmental, passive collaboration coach. The assistant has already answered. Decide whether one brief, specific insight would clearly improve the user's future AI interactions. Prefer "none". In the insight, never critique or grade the user, call a prompt weak, ask for a rewrite, or treat prompt length as competence. If useful, return one optional insight of at most 180 characters that is specific to this request, never generic advice. Confidence is how sure the tip is useful (0-1), never a judgement of the user.
 
 Use these principles:
 1. Define the task — unclear_task. Missing when the request is only a topic/noun phrase, the desired action or output type is unclear, or several asks have no main one. Tip style: say that an action such as explain, compare, write, or fix helps select the right answer.
@@ -29,10 +36,25 @@ Use these principles:
 
 Other categories: verification when a consequential claim should be checked before relying on it; delegation when a useful step could be handed to the AI; none when no tip is warranted.
 
-Stay silent with category "none" when the request is simple or conversational; the answer was good anyway and the missing detail did not hurt it; the topic is sensitive, personal, health-related, or emotional; the same category was recently shown or dismissed; confidence is low; or the only possible advice is generic. A wrong tip is worse than no tip.`;
+Stay silent with category "none" when the request is simple or conversational; the answer was good anyway and the missing detail did not hurt it; the topic is sensitive, personal, health-related, or emotional; the same category was recently shown or dismissed; confidence is low; or the only possible advice is generic. A wrong tip is worse than no tip.
 
+Before choosing a tip, score the user's prompt in rubric on four dimensions, each 2 (clear), 1 (missing but the answer was fine anyway), 0 (missing AND it visibly hurt the answer), or null (not applicable): task (principle 1), context (principle 2), success_criteria (principle 3), efficiency (principle 4). A 0 needs evidence from the answer: hedging across cases, a consequential guess, padding, or a mismatch with what the user clearly wanted. Put one short phrase per 0 in evidence; if you can't point to evidence, score 1. Only give a tip for a dimension scored 0. Score simple, casual exchanges fairly: a clear one-line request is 2 on task.`;
+
+const score = z.number().int().min(0).max(2).nullable();
+
+// OpenAI strict JSON mode needs every key present, so optional fields are nullable here
+// and nulls are dropped before the decision leaves this file.
+// biome-ignore assist/source/useSortedKeys: rubric must come first so the model scores before it writes a tip.
 const decisionSchema = z.object({
-  assumedDetail: z.string().optional(),
+  // biome-ignore assist/source/useSortedKeys: scores first, then the evidence for any 0.
+  rubric: z.object({
+    task: score,
+    context: score,
+    success_criteria: score,
+    efficiency: score,
+    evidence: z.array(z.string()),
+  }),
+  assumedDetail: z.string().nullable(),
   category: z.enum([
     "unclear_task",
     "missing_context",
@@ -44,8 +66,8 @@ const decisionSchema = z.object({
     "none",
   ]),
   confidence: z.number().min(0).max(1),
-  insight: z.string().optional(),
-  whyRelevant: z.string().optional(),
+  insight: z.string().nullable(),
+  whyRelevant: z.string().nullable(),
 });
 
 /** Never throws: any failure is silence (category "none"). */
@@ -66,15 +88,19 @@ export async function observe({
   }
 
   if (useMock) {
+    const decision = fixtureDecision({
+      assistantReply,
+      previousUserMessage,
+      userMessage,
+    });
+    const rubric = fixtureRubric(userMessage, decision);
     return {
-      decision: fixtureDecision({
-        assistantReply,
-        previousUserMessage,
-        userMessage,
-      }),
+      decision,
       isSensitive: false,
       isSimple: false,
+      rubric,
       source: "fixture",
+      strength: rubric ? promptStrength(rubric) : undefined,
     };
   }
 
@@ -88,12 +114,37 @@ export async function observe({
     const { output } = await generateText({
       abortSignal: AbortSignal.timeout(OBSERVER_TIMEOUT_MS),
       instructions: OBSERVER_PROMPT,
-      model: anthropic(OBSERVER_MODEL),
+      model: openai(OBSERVER_MODEL),
       output: Output.object({ schema: decisionSchema }),
       prompt: `${previous}<user_request>\n${userMessage}\n</user_request>\n\n<assistant_answer>\n${assistantReply.slice(0, MAX_REPLY_CHARS)}\n</assistant_answer>${lengthHint}`,
     });
-    const decision = output.insight?.trim() ? output : NONE;
-    return { decision, isSensitive: false, isSimple: false, source: "llm" };
+    // Schema already limits each score to an integer 0-2 or null.
+    const rubric = output.rubric as Rubric;
+    // A tip needs a dimension scored 0, so the tip never contradicts a "strong" tier.
+    const hasGap = [
+      rubric.task,
+      rubric.context,
+      rubric.success_criteria,
+      rubric.efficiency,
+    ].includes(0);
+    const decision: CoachingDecision =
+      hasGap && output.category !== "none" && output.insight?.trim()
+        ? {
+            assumedDetail: output.assumedDetail ?? undefined,
+            category: output.category,
+            confidence: output.confidence,
+            insight: output.insight,
+            whyRelevant: output.whyRelevant ?? undefined,
+          }
+        : NONE;
+    return {
+      decision,
+      isSensitive: false,
+      isSimple: false,
+      rubric,
+      source: "llm",
+      strength: promptStrength(rubric),
+    };
   } catch (error) {
     console.warn("[coach] observer failed, staying silent:", error);
     return {
