@@ -12,6 +12,7 @@ import {
   isSimple,
   NONE,
 } from "./fixtures";
+import { clampInsight } from "./insight-length";
 import { promptStrength } from "./strength";
 import type {
   CoachingDecision,
@@ -132,7 +133,7 @@ export async function observe(
             assumedDetail: output.assumedDetail ?? undefined,
             category: output.category,
             confidence: output.confidence,
-            insight: output.insight,
+            insight: clampInsight(output.insight),
             whyRelevant: output.whyRelevant ?? undefined,
           }
         : NONE;
