@@ -12,11 +12,17 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import type {
-  CoachingCategory,
-  CoachingPreferences,
+import {
+  type CorrectionKind,
+  STYLE_LABELS,
+} from "@/lib/reverse-alignment/preference-detector";
+import {
+  type CoachingCategory,
+  type CoachingPreferences,
+  STYLE_KINDS,
 } from "@/lib/reverse-alignment/types";
 import { useCoach } from "./coach-provider";
+import { Quotes } from "./preference-offer";
 
 const CATEGORY_LABELS: Record<CoachingCategory, string> = {
   assumption: "Assumptions I made",
@@ -96,20 +102,45 @@ function HiddenCategoryRow({ category }: { category: CoachingCategory }) {
   );
 }
 
-const STYLE_LABELS: Record<string, string> = { concise: "Short answers" };
-
-function RememberedStyleRow({ styleKey }: { styleKey: string }) {
-  const { dispatch } = useCoach();
+function RememberedStyleRow({ kind }: { kind: CorrectionKind }) {
+  const { dispatch, state } = useCoach();
+  const evidence = (state.signals.correctionLog[kind] ?? []).map(
+    (entry) => entry.text
+  );
   const forget = useCallback(
-    () => dispatch({ kind: "concise", type: "PREFERENCE_CLEARED" }),
-    [dispatch]
+    () => dispatch({ kind, type: "PREFERENCE_CLEARED" }),
+    [dispatch, kind]
   );
   return (
-    <li className="flex items-center justify-between gap-2">
-      <span>{STYLE_LABELS[styleKey] ?? styleKey}</span>
+    <li className="flex items-start justify-between gap-2">
+      <div className="min-w-0">
+        <span className="text-foreground">{STYLE_LABELS[kind]}</span>
+        {evidence.length > 0 ? (
+          <p className="text-xs">
+            Learned from <Quotes texts={evidence} />
+          </p>
+        ) : null}
+      </div>
       <Button onClick={forget} size="xs" variant="ghost">
         Forget
       </Button>
+    </li>
+  );
+}
+
+/** A correction seen but not yet asked about: learning in progress. */
+function NoticedStyleRow({ kind }: { kind: CorrectionKind }) {
+  const { state } = useCoach();
+  const evidence = (state.signals.correctionLog[kind] ?? []).map(
+    (entry) => entry.text
+  );
+  return (
+    <li>
+      <span className="text-foreground">{STYLE_LABELS[kind]}</span>
+      <p className="text-xs">
+        You said <Quotes texts={evidence} />. If it comes up again, I'll ask
+        before remembering it.
+      </p>
     </li>
   );
 }
@@ -157,8 +188,12 @@ export function CollaborationSettings() {
 
   // The UI controls frequency only; `enabled` stays true unless something else turns it off.
   const frequency = prefs.enabled ? prefs.frequency : "off";
-  const styles = Object.entries(prefs.confirmedStyles).filter(
-    ([, value]) => value !== undefined && value !== false
+  const styles = STYLE_KINDS.filter((kind) => prefs.confirmedStyles[kind]);
+  const noticed = STYLE_KINDS.filter(
+    (kind) =>
+      !prefs.confirmedStyles[kind] &&
+      (signals.correctionCounts[kind] ?? 0) > 0 &&
+      (signals.correctionLog[kind]?.length ?? 0) > 0
   );
 
   return (
@@ -209,24 +244,35 @@ export function CollaborationSettings() {
 
           <Section title="Remembered preferences">
             {styles.length > 0 ? (
-              <ul className="space-y-1">
-                {styles.map(([key]) => (
-                  <RememberedStyleRow key={key} styleKey={key} />
+              <ul className="space-y-2">
+                {styles.map((kind) => (
+                  <RememberedStyleRow key={kind} kind={kind} />
                 ))}
               </ul>
             ) : (
               <p>
                 None yet. If you keep asking for the same thing, like shorter
-                answers, I'll ask before remembering it.
+                answers or bullet points, I'll ask before remembering it.
               </p>
             )}
           </Section>
 
+          {noticed.length > 0 ? (
+            <Section title="Noticed">
+              <ul className="space-y-2">
+                {noticed.map((kind) => (
+                  <NoticedStyleRow key={kind} kind={kind} />
+                ))}
+              </ul>
+            </Section>
+          ) : null}
+
           <Section title="How this works">
             <p>
               To decide whether a tip would help, I look at your latest message
-              and my answer. Settings stay in this browser and nothing is sent
-              to analytics. Tips are suggestions, not judgements of you.
+              and my answer. Settings, and the words a preference was learned
+              from, stay in this browser and nothing is sent to analytics. Tips
+              are suggestions, not judgements of you.
             </p>
           </Section>
         </div>

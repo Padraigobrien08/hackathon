@@ -15,7 +15,10 @@ import {
   type CoachState,
   useCoachState,
 } from "@/lib/reverse-alignment/session-state";
-import type { CoachingDecision } from "@/lib/reverse-alignment/types";
+import type {
+  CoachingDecision,
+  StyleKind,
+} from "@/lib/reverse-alignment/types";
 import { CollaborationSettings } from "./collaboration-settings";
 
 export type StoredInsight = {
@@ -33,6 +36,9 @@ type CoachContextValue = {
   /** "Remember this?" offers by assistant message id. Replace the tip on that turn. null = answered. */
   offers: ReadonlyMap<string, PreferenceOffer | null>;
   setOffer: (messageId: string, offer: PreferenceOffer | null) => void;
+  /** Remembered styles each assistant message was written with. Browser-only, this page only. */
+  adaptations: ReadonlyMap<string, StyleKind[]>;
+  setAdaptation: (messageId: string, styles: StyleKind[]) => void;
   /** ?demo=1: skip the cooldown (scripted demo; shown with a badge). */
   demo: boolean;
   /** "How I'm helping" panel, opened from the tip card or the sidebar menu. */
@@ -49,6 +55,9 @@ export function CoachProvider({ children }: { children: ReactNode }) {
     () => new Map()
   );
   const [offers, setOffers] = useState<Map<string, PreferenceOffer | null>>(
+    () => new Map()
+  );
+  const [adaptations, setAdaptations] = useState<Map<string, StyleKind[]>>(
     () => new Map()
   );
   const [demo, setDemo] = useState(false);
@@ -82,12 +91,21 @@ export function CoachProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const setAdaptation = useCallback(
+    (messageId: string, styles: StyleKind[]) => {
+      setAdaptations((prev) => new Map(prev).set(messageId, styles));
+    },
+    []
+  );
+
   const value = useMemo(
     () => ({
+      adaptations,
       demo,
       dispatch,
       insights,
       offers,
+      setAdaptation,
       setInsight,
       setOffer,
       setSettingsOpen,
@@ -95,10 +113,12 @@ export function CoachProvider({ children }: { children: ReactNode }) {
       state,
     }),
     [
+      adaptations,
       demo,
       dispatch,
       insights,
       offers,
+      setAdaptation,
       setInsight,
       setOffer,
       settingsOpen,

@@ -25,7 +25,7 @@ export type CoachEvent =
   | { type: "SET_FREQUENCY"; frequency: CoachingPreferences["frequency"] }
   | { type: "SET_ENABLED"; enabled: boolean }
   | { type: "SET_SHOW_ASSUMPTIONS"; showAssumptions: boolean }
-  | { type: "CORRECTION_SEEN"; kind: CorrectionKind }
+  | { type: "CORRECTION_SEEN"; kind: CorrectionKind; text: string; at: number }
   | { type: "PREFERENCE_ACCEPTED"; kind: CorrectionKind }
   | { type: "PREFERENCE_DECLINED"; kind: CorrectionKind } // count restarts: may ask again, never every turn
   | { type: "PREFERENCE_CLEARED"; kind: CorrectionKind } // "Forget" in settings
@@ -36,6 +36,7 @@ export type CoachEvent =
 // "Got it" is an acknowledgement, not a complaint, so it costs nothing.
 export const DISMISS_PENALTY_TURNS = 2;
 const RECENT_LIMIT = 5;
+const EVIDENCE_LIMIT = 3;
 
 export const INITIAL_STATE: CoachState = {
   prefs: DEFAULT_PREFERENCES,
@@ -123,24 +124,40 @@ export function coachReducer(state: CoachState, event: CoachEvent): CoachState {
             ...signals.correctionCounts,
             [event.kind]: (signals.correctionCounts[event.kind] ?? 0) + 1,
           },
+          correctionLog: {
+            ...signals.correctionLog,
+            [event.kind]: [
+              ...(signals.correctionLog[event.kind] ?? []),
+              { at: event.at, text: event.text },
+            ].slice(-EVIDENCE_LIMIT),
+          },
         },
       };
     case "PREFERENCE_ACCEPTED":
     case "PREFERENCE_DECLINED":
-    case "PREFERENCE_CLEARED":
+    case "PREFERENCE_CLEARED": {
+      const accepted = event.type === "PREFERENCE_ACCEPTED";
       return {
         prefs: {
           ...prefs,
           confirmedStyles: {
             ...prefs.confirmedStyles,
-            concise: event.type === "PREFERENCE_ACCEPTED" ? true : undefined,
+            [event.kind]: accepted ? true : undefined,
           },
         },
         signals: {
           ...signals,
           correctionCounts: { ...signals.correctionCounts, [event.kind]: 0 },
+          // Accepted styles keep their evidence ("learned from"); declined or forgotten ones drop it.
+          correctionLog: {
+            ...signals.correctionLog,
+            [event.kind]: accepted
+              ? signals.correctionLog[event.kind]
+              : undefined,
+          },
         },
       };
+    }
     case "RESET":
       return INITIAL_STATE;
     case "HYDRATE":

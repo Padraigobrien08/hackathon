@@ -1,6 +1,10 @@
 import type { Geo } from "@vercel/functions";
 import type { ArtifactKind } from "@/components/chat/artifact";
-import type { ConfirmedStyles } from "@/lib/reverse-alignment/types";
+import {
+  type ConfirmedStyles,
+  STYLE_KINDS,
+  type StyleKind,
+} from "@/lib/reverse-alignment/types";
 
 export const artifactsPrompt = `
 Artifacts is a side panel that displays content alongside the conversation. It supports scripts (code), documents (text), and spreadsheets. Changes appear in real-time.
@@ -68,8 +72,21 @@ About the origin of user's request:
 export const CONCISE_PREFERENCE_PROMPT =
   "The user has asked for short answers and approved remembering that: answer in 3 sentences or fewer, with no headings or lists. Keep any draft they ask for to the essentials.";
 
+/** Fixed text per approved style (never user input). The mock model looks for these too. */
+export const STYLE_PROMPTS: Record<StyleKind, string> = {
+  bullets:
+    "The user has approved bullet-point answers: structure answers as short bullet points rather than paragraphs. Drafts they ask for (emails, letters) keep their normal form.",
+  codeOnly:
+    "The user has approved code-only answers for coding requests: reply with the code and at most one short sentence, no step-by-step explanation. Answer non-coding questions normally.",
+  concise: CONCISE_PREFERENCE_PROMPT,
+  plain:
+    "The user has approved plain-language answers: avoid jargon and technical terms. If one is unavoidable, explain it in a few everyday words.",
+};
+
 const getPreferencesPrompt = (preferences?: ConfirmedStyles) =>
-  preferences?.concise ? `\n\n${CONCISE_PREFERENCE_PROMPT}` : "";
+  STYLE_KINDS.filter((kind) => preferences?.[kind])
+    .map((kind) => `\n\n${STYLE_PROMPTS[kind]}`)
+    .join("");
 
 export const systemPrompt = ({
   requestHints,

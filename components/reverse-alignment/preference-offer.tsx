@@ -44,7 +44,14 @@ export function PreferenceOfferCard({ messageId }: { messageId: string }) {
     >
       <SlidersHorizontalIcon aria-hidden className="mt-0.5 size-3.5 shrink-0" />
       <div className="min-w-0 flex-1 space-y-1.5">
-        <p>{offer.text}</p>
+        <p>
+          {offer.evidence.length > 0 ? (
+            <>
+              You said <Quotes texts={offer.evidence} />.{" "}
+            </>
+          ) : null}
+          {offer.question}
+        </p>
         <div className="-ml-2.5 flex flex-wrap gap-0.5">
           <Button onClick={accept} size="xs" variant="ghost">
             Yes, remember
@@ -56,4 +63,15 @@ export function PreferenceOfferCard({ messageId }: { messageId: string }) {
       </div>
     </aside>
   );
+}
+
+/** The user's own words, quoted: "too long" and "shorter please". */
+export function Quotes({ texts }: { texts: string[] }) {
+  return texts.map((text, index) => (
+    // biome-ignore lint/suspicious/noArrayIndexKey: the same words can repeat; order is stable
+    <span key={index}>
+      {index > 0 ? (index === texts.length - 1 ? " and " : ", ") : null}
+      <q className="text-foreground">{text}</q>
+    </span>
+  ));
 }

@@ -30,8 +30,15 @@ export const postRequestBodySchema = z.object({
   id: z.uuid(),
   message: userMessageSchema.optional(),
   messages: z.array(toolApprovalMessageSchema).optional(),
-  // Reverse Alignment: user-approved styles only (ConfirmedStyles). M4: concise.
-  preferences: z.object({ concise: z.boolean().optional() }).optional(),
+  // Reverse Alignment: user-approved styles only (ConfirmedStyles).
+  preferences: z
+    .object({
+      bullets: z.boolean().optional(),
+      codeOnly: z.boolean().optional(),
+      concise: z.boolean().optional(),
+      plain: z.boolean().optional(),
+    })
+    .optional(),
   selectedChatModel: z.string(),
   selectedVisibilityType: z.enum(["public", "private"]),
 });
