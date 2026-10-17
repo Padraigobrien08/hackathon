@@ -2,8 +2,11 @@
 // Change only after telling the team.
 
 export type CoachingCategory =
+  | "unclear_task"
   | "missing_context"
   | "assumption"
+  | "success_criteria"
+  | "efficiency"
   | "verification"
   | "delegation"
   | "none";
@@ -16,8 +19,12 @@ export type CoachingDecision = {
   assumedDetail?: string;
 };
 
-/** POST /api/coach — only the last exchange (minimum context). Call AFTER the answer finishes streaming. */
-export type CoachRequest = { userMessage: string; assistantReply: string };
+/** POST /api/coach — the last exchange plus optional prior request. Call AFTER the answer finishes streaming. */
+export type CoachRequest = {
+  userMessage: string;
+  assistantReply: string;
+  previousUserMessage?: string;
+};
 export type CoachResponse = {
   decision: CoachingDecision;
   isSimple: boolean;

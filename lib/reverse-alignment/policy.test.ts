@@ -16,6 +16,8 @@ const { prefs, signals } = INITIAL_STATE;
 
 test("no tip: trivial request", () => {
   assert.equal(isSimple("What's 8 × 9?"), true);
+  assert.equal(isSimple("thanks"), true);
+  assert.equal(isSimple("marketing plan"), false);
   assert.equal(
     shouldShowTip(tip, prefs, signals, { ...plain, isSimple: true }),
     false

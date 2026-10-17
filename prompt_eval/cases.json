@@ -1,0 +1,101 @@
+[
+  {
+    "id": "define-task-weak",
+    "principle": "define_task",
+    "userMessage": "React state",
+    "assistantReply": "React state lets components remember values between renders.",
+    "expect": "unclear_task"
+  },
+  {
+    "id": "define-task-strong",
+    "principle": "define_task",
+    "userMessage": "Explain when to use useState vs useReducer, with a short example of each.",
+    "assistantReply": "Use useState for independent simple values and useReducer for related transitions.",
+    "expect": "none"
+  },
+  {
+    "id": "context-weak",
+    "principle": "relevant_context",
+    "userMessage": "Why does my code crash?",
+    "assistantReply": "I would need to see the code and exact error to diagnose it.",
+    "expect": "missing_context"
+  },
+  {
+    "id": "context-strong",
+    "principle": "relevant_context",
+    "userMessage": "This Python 3.12 script crashes with KeyError: 'id' on line 14 when the API returns an empty list. Code below:\n```python\nitem = response[0]\nprint(item['id'])\n```",
+    "assistantReply": "Guard against an empty response before indexing it.",
+    "expect": "none"
+  },
+  {
+    "id": "criteria-weak",
+    "principle": "success_criteria",
+    "userMessage": "Write a cover letter.",
+    "assistantReply": "Dear Hiring Manager, I am writing to apply for the role.",
+    "expect": "success_criteria"
+  },
+  {
+    "id": "criteria-strong",
+    "principle": "success_criteria",
+    "userMessage": "Write a 250-word cover letter for a junior data analyst role; confident but not salesy; highlight SQL and one project.",
+    "assistantReply": "Dear Hiring Manager, I am applying for the junior data analyst role.",
+    "expect": "none"
+  },
+  {
+    "id": "efficiency-weak",
+    "principle": "efficiency",
+    "userMessage": "Here are 400 lines of code. Something's wrong somewhere. const record01 = source.map(value => value); const record02 = source.map(value => value); const record03 = source.map(value => value); const record04 = source.map(value => value); const record05 = source.map(value => value); const record06 = source.map(value => value); const record07 = source.map(value => value); const record08 = source.map(value => value); const record09 = source.map(value => value); const record10 = source.map(value => value); const record11 = source.map(value => value); const record12 = source.map(value => value); const record13 = source.map(value => value); const record14 = source.map(value => value); const record15 = source.map(value => value); const record16 = source.map(value => value); const record17 = source.map(value => value); const record18 = source.map(value => value); const record19 = source.map(value => value); const record20 = source.map(value => value); const record21 = source.map(value => value); const record22 = source.map(value => value); const record23 = source.map(value => value); const record24 = source.map(value => value); const record25 = source.map(value => value); const record26 = source.map(value => value); const record27 = source.map(value => value); const record28 = source.map(value => value); const record29 = source.map(value => value); const record30 = source.map(value => value); const record31 = source.map(value => value); const record32 = source.map(value => value); const record33 = source.map(value => value); const record34 = source.map(value => value); const record35 = source.map(value => value); const record36 = source.map(value => value); const record37 = source.map(value => value); const record38 = source.map(value => value); const record39 = source.map(value => value); const record40 = source.map(value => value);",
+    "assistantReply": "I need the failing function and error to identify the problem.",
+    "expect": "efficiency"
+  },
+  {
+    "id": "efficiency-strong",
+    "principle": "efficiency",
+    "userMessage": "Fix this function. Expected 3 but got undefined:\n```ts\nfunction first(values: number[]) { return values[0]; }\n```",
+    "assistantReply": "Check whether the array is empty before returning its first value.",
+    "expect": "none"
+  },
+  {
+    "id": "correction-reveals-criteria",
+    "principle": "success_criteria",
+    "previousUserMessage": "Explain how a mortgage works",
+    "userMessage": "shorter",
+    "assistantReply": "A mortgage is a home loan repaid with interest.",
+    "expect": "success_criteria"
+  },
+  {
+    "id": "silence-thanks",
+    "principle": "silence",
+    "userMessage": "thanks",
+    "assistantReply": "You're welcome.",
+    "expect": "none"
+  },
+  {
+    "id": "silence-arithmetic",
+    "principle": "silence",
+    "userMessage": "what's 15% of 80",
+    "assistantReply": "12",
+    "expect": "none"
+  },
+  {
+    "id": "silence-greeting",
+    "principle": "silence",
+    "userMessage": "hello",
+    "assistantReply": "Hello! How can I help?",
+    "expect": "none"
+  },
+  {
+    "id": "silence-sensitive",
+    "principle": "silence",
+    "userMessage": "I am having a panic attack",
+    "assistantReply": "Focus on slow breathing and contact someone you trust nearby.",
+    "expect": "none"
+  },
+  {
+    "id": "silence-good-specific",
+    "principle": "silence",
+    "userMessage": "Compare PostgreSQL and SQLite for a small offline desktop app. Give three trade-offs in a table and recommend one.",
+    "assistantReply": "SQLite is the better fit for a small offline desktop app.",
+    "expect": "none"
+  }
+]

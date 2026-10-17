@@ -27,8 +27,11 @@ import { Quotes } from "./preference-offer";
 const CATEGORY_LABELS: Record<CoachingCategory, string> = {
   assumption: "Assumptions I made",
   delegation: "Steps you could hand to me",
+  efficiency: "Keeping prompts focused",
   missing_context: "Details that would change the answer",
   none: "Other",
+  success_criteria: "Saying what a good answer looks like",
+  unclear_task: "Saying what you want done",
   verification: "Things worth double-checking",
 };
 

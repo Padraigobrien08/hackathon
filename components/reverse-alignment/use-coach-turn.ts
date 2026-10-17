@@ -51,8 +51,13 @@ export function useCoachTurn() {
       if (isAbort || isDisconnect || isError || message.role !== "assistant") {
         return;
       }
-      const userMessage = messages.findLast((m) => m.role === "user");
+      const userMessages = messages.filter((m) => m.role === "user");
+      const userMessage = userMessages.at(-1);
+      const previousUserMessage = userMessages.at(-2);
       const userText = userMessage ? getTextFromMessage(userMessage) : "";
+      const previousUserText = previousUserMessage
+        ? getTextFromMessage(previousUserMessage)
+        : undefined;
       const replyText = getTextFromMessage(message);
 
       // The styles this answer was written with (sent with the request), for the "Adapted" chip.
@@ -101,6 +106,7 @@ export function useCoachTurn() {
           {
             body: JSON.stringify({
               assistantReply: replyText,
+              previousUserMessage: previousUserText,
               userMessage: userText,
             }),
             headers: { "Content-Type": "application/json" },
