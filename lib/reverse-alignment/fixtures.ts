@@ -14,7 +14,7 @@ const GREETING_OR_ACKNOWLEDGEMENT =
   /^(hi|hello|hey|thanks|thank you|thx|ok|okay|cool|great|nice|yes|no|sure|got it)( (there|a lot|so much|very much|again|all|everyone))?[!.\s]*$/i;
 const ACTION_OR_QUESTION =
   /\b(explain|write|summari[sz]e|compare|fix|find|list|give|make|create|draft|how|what|why|can|could|should|is|are|do|does)\b/i;
-const UNSEEN_MATERIAL =
+export const UNSEEN_MATERIAL =
   /\b(my|the|this) (code|error|script|function|policy|doc(ument)?)\b/i;
 const EXPLICIT_SUCCESS_CRITERIA =
   // Narrow on purpose: a bare "for ..." also matches demo prompts like "asking for Friday off".
@@ -102,7 +102,7 @@ const EXISTING_FIXTURES: [RegExp, CoachingDecision][] = [
   ],
 ];
 
-function isTopicOnly(text: string) {
+export function isTopicOnly(text: string) {
   const trimmed = text.trim().replace(/[.!?]+$/, "");
   return (
     trimmed.length > 0 &&

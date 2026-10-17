@@ -52,7 +52,6 @@ export type PersonSummary = {
 };
 
 export type DashboardData = {
-  source: "live" | "sample";
   quality: QualitySummary;
   qualityByDay: {
     date: string;
@@ -161,10 +160,7 @@ function gateStats(rows: MetricRow[]) {
   };
 }
 
-export function aggregate(
-  rows: MetricRow[],
-  source: DashboardData["source"]
-): DashboardData {
+export function aggregate(rows: MetricRow[]): DashboardData {
   const spendUsd = sum(rows.map((r) => r.totalCostUsd));
   const days = rows.length
     ? Math.round(
@@ -249,7 +245,6 @@ export function aggregate(
     promptsUntilClear,
     quality: qualityStats(rows),
     qualityByDay,
-    source,
     totals: {
       dailySpendUsd: spendUsd / days,
       days,
