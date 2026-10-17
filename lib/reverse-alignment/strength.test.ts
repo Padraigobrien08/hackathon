@@ -16,8 +16,8 @@ test("all clear is strong", () => {
   assert.equal(promptStrength(rubric({})), "strong");
 });
 
-test("one harmless gap is still strong", () => {
-  assert.equal(promptStrength(rubric({ success_criteria: 1 })), "strong");
+test("any gap, even a harmless one, is moderate", () => {
+  assert.equal(promptStrength(rubric({ success_criteria: 1 })), "moderate");
 });
 
 test("one gap that hurt the answer is moderate", () => {

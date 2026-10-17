@@ -7,8 +7,10 @@ import type {
 } from "./types";
 
 // Deterministic checks that run before any model call, in mock AND real mode.
+// "crisis"/"emergency" only in personal-safety phrasing: a bare word also matched
+// "the 2008 financial crisis" or "an emergency fund", which then never got a tier or a tip.
 const SENSITIVE =
-  /\b(suicid\w*|self[- ]harm|kill myself|overdose|abus\w*|emergency|crisis|panic attack)/i;
+  /\b(suicid\w*|self[- ]harm|kill myself|overdose|abus\w*|panic attack|in (a )?crisis|mental health crisis|crisis (line|hotline|team)|medical emergency|(it'?s|this is) an emergency|emergency (room|services|department))/i;
 const ARITHMETIC = /^\s*(what(['’]?s| is)\s+)?[\d\s.%+\-*x×/÷()=]+\??\s*$/i;
 const GREETING_OR_ACKNOWLEDGEMENT =
   /^(hi|hello|hey|thanks|thank you|thx|ok|okay|cool|great|nice|yes|no|sure|got it)( (there|a lot|so much|very much|again|all|everyone))?[!.\s]*$/i;
