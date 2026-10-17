@@ -50,7 +50,7 @@ export function PromptStrengthBadge({ messageId }: { messageId: string }) {
         {SEGMENTS.map((index) => (
           <span
             className={cn(
-              "h-1 w-4 rounded-full transition-colors",
+              "h-1 w-6 rounded-full transition-colors",
               index < FILLED[stored.strength]
                 ? COLOR[stored.strength]
                 : "bg-muted-foreground/15"
