@@ -80,6 +80,7 @@ export async function POST(request: Request) {
   try {
     const {
       id,
+      live,
       message,
       messages,
       preferences,
@@ -289,7 +290,7 @@ export async function POST(request: Request) {
             supportsTools,
           }),
           messages: modelMessages,
-          model: getLanguageModel(chatModel),
+          model: getLanguageModel(chatModel, live === true),
           onAbort() {
             stopWaitingStatus();
           },

@@ -1,7 +1,7 @@
 import { countTokens } from "gpt-tokenizer";
 import { auth } from "@/app/(auth)/auth";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
-import { useMock } from "@/lib/ai/providers";
+import { answerModelId } from "@/lib/ai/providers";
 import {
   getChatById,
   getMessageById,
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     const outputTokens = countTokens(assistantReply);
 
     const [row] = await recordPromptMetric({
-      answerModel: useMock ? "mock" : DEFAULT_CHAT_MODEL,
+      answerModel: answerModelId(DEFAULT_CHAT_MODEL),
       assistantMessageId,
       chatId: chat.id,
       // Set here like Message_v2 does, so both tables use the same clock (DB now() is local time).
