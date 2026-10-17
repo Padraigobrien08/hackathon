@@ -722,3 +722,16 @@ export async function savePromptEvaluation({
     throw new ChatbotError("bad_request:database", { cause: error });
   }
 }
+
+// Manager dashboard: every metric row with its owner's email (all users, not just the caller).
+export async function getPromptMetricsWithUser() {
+  try {
+    return await db
+      .select({ email: user.email, metric: promptMetric })
+      .from(promptMetric)
+      .leftJoin(user, eq(promptMetric.userId, user.id))
+      .orderBy(asc(promptMetric.createdAt));
+  } catch (error) {
+    throw new ChatbotError("bad_request:database", { cause: error });
+  }
+}
