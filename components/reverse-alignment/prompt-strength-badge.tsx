@@ -34,12 +34,34 @@ export function PromptStrengthBadge({ messageId }: { messageId: string }) {
   if (!stored || !state.prefs.showStrength) {
     return null;
   }
-  const label = `${LABELS[stored.strength]}${stored.scripted ? " (demo)" : ""}`;
+  if (stored.strength === "pending") {
+    return (
+      <span
+        aria-label="Rating this prompt"
+        className="-mt-1 flex w-fit p-1"
+        data-strength="pending"
+        data-testid="prompt-strength"
+        role="status"
+        title="Rating this prompt…"
+      >
+        <span aria-hidden className="flex animate-pulse gap-0.5">
+          {SEGMENTS.map((index) => (
+            <span
+              className="h-1 w-6 rounded-full bg-muted-foreground/20"
+              key={index}
+            />
+          ))}
+        </span>
+      </span>
+    );
+  }
+  const { strength } = stored;
+  const label = `${LABELS[strength]}${stored.scripted ? " (demo)" : ""}`;
   return (
     <button
       aria-label={label}
       className="-mt-1 flex w-fit items-center gap-1.5 rounded-md p-1 text-[10px] text-muted-foreground/60 hover:text-foreground"
-      data-strength={stored.strength}
+      data-strength={strength}
       data-testid="prompt-strength"
       onClick={open}
       title={`${label}. Based on task, context, what a good answer looks like, and focus. Turn off in How I'm helping.`}
@@ -51,8 +73,8 @@ export function PromptStrengthBadge({ messageId }: { messageId: string }) {
           <span
             className={cn(
               "h-1 w-6 rounded-full transition-colors",
-              index < FILLED[stored.strength]
-                ? COLOR[stored.strength]
+              index < FILLED[strength]
+                ? COLOR[strength]
                 : "bg-muted-foreground/15"
             )}
             key={index}

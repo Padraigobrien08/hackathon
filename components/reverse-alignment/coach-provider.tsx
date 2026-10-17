@@ -29,7 +29,8 @@ export type StoredInsight = {
 };
 
 export type StoredStrength = {
-  strength: PromptStrength;
+  /** "pending" while the coach is still rating the prompt: shown as a placeholder bar. */
+  strength: PromptStrength | "pending";
   /** Fixture or ?demo=1, as for tips. */
   scripted: boolean;
 };
@@ -49,7 +50,8 @@ type CoachContextValue = {
   setAdaptation: (messageId: string, styles: StyleKind[]) => void;
   /** Prompt tiers by USER message id. Browser-only; shown only while prefs.showStrength is on. */
   strengths: ReadonlyMap<string, StoredStrength>;
-  setStrength: (messageId: string, strength: StoredStrength) => void;
+  /** null removes it (e.g. the coach failed or returned no tier). */
+  setStrength: (messageId: string, strength: StoredStrength | null) => void;
   /** ?demo=1: skip the cooldown (scripted demo; shown with a badge). */
   demo: boolean;
   /** "How I'm helping" panel, opened from the tip card or the sidebar menu. */
@@ -124,8 +126,16 @@ export function CoachProvider({ children }: { children: ReactNode }) {
   );
 
   const setStrength = useCallback(
-    (messageId: string, strength: StoredStrength) => {
-      setStrengths((prev) => new Map(prev).set(messageId, strength));
+    (messageId: string, strength: StoredStrength | null) => {
+      setStrengths((prev) => {
+        const next = new Map(prev);
+        if (strength) {
+          next.set(messageId, strength);
+        } else {
+          next.delete(messageId);
+        }
+        return next;
+      });
     },
     []
   );
