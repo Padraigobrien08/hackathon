@@ -17,7 +17,6 @@ import {
 import { useDataStream } from "./data-stream-provider";
 import { DocumentToolResult } from "./document";
 import { DocumentPreview } from "./document-preview";
-import { SparklesIcon } from "./icons";
 import { MessageActions } from "./message-actions";
 import { MessageReasoning } from "./message-reasoning";
 import { PreviewAttachment } from "./preview-attachment";
@@ -372,24 +371,17 @@ const PurePreviewMessage = ({
       )}
       data-role={message.role}
       data-testid={`message-${message.role}`}
+      id={`message-${message.id}`}
     >
+      {/* User: bubble on the right of the column. Assistant: full column width, no avatar. */}
       <div
         className={cn(
-          isUser ? "flex flex-col items-end gap-2" : "flex items-start gap-3"
+          isUser
+            ? "flex flex-col items-end gap-2"
+            : "flex min-w-0 flex-col gap-2"
         )}
       >
-        {isAssistant && (
-          <div className="flex h-[calc(13px*1.65)] shrink-0 items-center">
-            <div className="flex size-7 items-center justify-center rounded-lg bg-muted/60 text-muted-foreground ring-1 ring-border/50">
-              <SparklesIcon size={13} />
-            </div>
-          </div>
-        )}
-        {isAssistant ? (
-          <div className="flex min-w-0 flex-1 flex-col gap-2">{content}</div>
-        ) : (
-          content
-        )}
+        {content}
       </div>
     </div>
   );
@@ -403,14 +395,6 @@ export const ThinkingMessage = () => (
     data-role="assistant"
     data-testid="message-assistant-loading"
   >
-    <div className="flex items-start gap-3">
-      <div className="flex h-[calc(13px*1.65)] shrink-0 items-center">
-        <div className="flex size-7 items-center justify-center rounded-lg bg-muted/60 text-muted-foreground ring-1 ring-border/50">
-          <SparklesIcon size={13} />
-        </div>
-      </div>
-
-      <WaitingText />
-    </div>
+    <WaitingText />
   </div>
 );

@@ -11,10 +11,15 @@ import type { VisibilityType } from "./visibility-selector";
 type SuggestedActionsProps = {
   chatId: string;
   sendMessage: UseChatHelpers<ChatMessage>["sendMessage"];
+  onSent?: () => void;
   selectedVisibilityType: VisibilityType;
 };
 
-function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
+function PureSuggestedActions({
+  chatId,
+  sendMessage,
+  onSent,
+}: SuggestedActionsProps) {
   const suggestedActions = suggestions;
   const handleSuggestionClick = useCallback(
     (suggestion: string) => {
@@ -27,8 +32,9 @@ function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
         parts: [{ text: suggestion, type: "text" }],
         role: "user",
       });
+      onSent?.();
     },
-    [chatId, sendMessage]
+    [chatId, sendMessage, onSent]
   );
 
   return (
