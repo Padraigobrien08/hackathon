@@ -9,6 +9,16 @@ Plan, systems and owners: [PLAN.md](PLAN.md). Rules for Claude Code: [CLAUDE.md]
 Needs Node 20+, pnpm, and Docker (for local Postgres).
 
 ```bash
+make start                          # first run: checks tools, creates .env.local, installs, starts Postgres, migrates, runs the app
+make real OPENAI_API_KEY=sk-...     # optional: real OpenAI answers (default is mock mode, no key needed)
+make help                           # everything else: status, open, check, eval, stop
+```
+
+Then open http://localhost:3000. Port taken? `make start PORT=3001`. Postgres port taken? `make start DB_PORT=5433`.
+
+Manual steps, if you'd rather not use make:
+
+```bash
 docker run -d --name ra-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=chatbot -p 5432:5432 postgres:16-alpine
 cp .env.example .env.local      # then set AUTH_SECRET: openssl rand -base64 32
 pnpm install
