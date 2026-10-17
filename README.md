@@ -1,4 +1,4 @@
-# Reverse Alignment
+# PromptFlip
 
 An AI assistant that answers your request first, and occasionally offers one optional tip to help you work better with AI. Built on the [Vercel AI Chatbot](https://github.com/vercel/ai-chatbot) template, using OpenAI (`gpt-6-luna`) via `@ai-sdk/openai`.
 
