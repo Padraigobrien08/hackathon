@@ -86,7 +86,7 @@ export function CoachProvider({ children }: { children: ReactNode }) {
       {children}
       <CollaborationSettings />
       {demo ? (
-        <div className="pointer-events-none fixed top-3 right-3 z-50 rounded-md bg-muted px-2 py-1 text-[11px] text-muted-foreground ring-1 ring-border/60">
+        <div className="pointer-events-none fixed top-3 right-3 z-50 lg:top-auto lg:bottom-3 rounded-md bg-muted px-2 py-1 text-[11px] text-muted-foreground ring-1 ring-border/60">
           Demo mode: tip cooldown off
         </div>
       ) : null}
