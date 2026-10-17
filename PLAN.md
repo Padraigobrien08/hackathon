@@ -55,7 +55,7 @@ CoachingDecision = { category: "missing_context"|"assumption"|"verification"|"de
 ## Key design rules
 
 - **Two gates.** `preGate(prefs, signals)` runs *before* calling the observer (enabled, frequency, cooldown), so most turns cost no LLM call. `shouldShowTip(...)` (spec §6) runs on the observer's decision.
-- **Cooldown start.** `turnsSinceLastTip` starts at the cooldown value, otherwise no tip is possible before turn 4. Only non-simple turns count.
+- **No cooldown by default (decided 2026-10-17).** On "Normal" a tip can show on every eligible turn. Spacing only comes from the user: "Fewer" waits 5 eligible turns between tips, and closing a tip with ✕ skips the next turn. `turnsSinceLastTip` starts at the cooldown value; only non-simple turns count.
 - **Confidence is a knob, not truth.** The real guard is the observer prompt preferring `none`, plus deterministic isSimple/isSensitive checks before any model call.
 - **One card per turn.** A preference prompt suppresses any tip on that turn.
 - **Observer failure = silence.** Abort after ~8s; the route returns `none` on any error.

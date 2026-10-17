@@ -64,7 +64,7 @@ test("one useful tip on the first eligible turn", () => {
   assert.equal(shouldShowTip(tip, s.prefs, s.signals, plain), true);
 });
 
-test("cooldown: at most one tip per three eligible turns", () => {
+test("normal frequency: no cooldown, a tip can show on every eligible turn", () => {
   let s = coachReducer(INITIAL_STATE, {
     category: "assumption",
     type: "TIP_SHOWN",
@@ -78,7 +78,7 @@ test("cooldown: at most one tip per three eligible turns", () => {
       s = coachReducer(s, { category: "assumption", type: "TIP_SHOWN" });
     }
   }
-  assert.deepEqual(shown, [false, false, true, false, false, true]);
+  assert.deepEqual(shown, [true, true, true, true, true, true]);
 });
 
 test("simple turns do not count toward the cooldown", () => {
@@ -99,10 +99,10 @@ test("dismiss: closing a tip delays the next one", () => {
     kind: "dismiss",
     type: "TIP_DISMISSED",
   });
-  for (let turn = 0; turn < 4; turn += 1) {
-    s = coachReducer(s, { isSimple: false, type: "TURN_COMPLETED" });
-  }
+  s = coachReducer(s, { isSimple: false, type: "TURN_COMPLETED" });
   assert.equal(preGate(s.prefs, s.signals), false);
+  s = coachReducer(s, { isSimple: false, type: "TURN_COMPLETED" });
+  assert.equal(preGate(s.prefs, s.signals), true);
 });
 
 test("not this kind: that category is never shown again", () => {
@@ -133,7 +133,7 @@ test("coaching off / fewer tips take effect immediately", () => {
     frequency: "low",
     type: "SET_FREQUENCY",
   });
-  assert.equal(preGate(low.prefs, low.signals), false); // needs 5 turns, starts at 3
+  assert.equal(preGate(low.prefs, low.signals), false); // needs 5 turns, starts at 0
 });
 test("reset clears signals and preferences", () => {
   let s = coachReducer(INITIAL_STATE, {
