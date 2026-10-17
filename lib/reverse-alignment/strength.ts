@@ -23,7 +23,9 @@ export function promptStrength(
   if (zeros >= 2 || rubric.task === 0) {
     return "weak";
   }
-  if (zeros === 1 || ones >= 2) {
+  // "Strong" means nothing was missing. Any gap, even one the answer coped with, is "moderate",
+  // so every prompt that left something out gets a tip.
+  if (zeros === 1 || ones >= 1) {
     return "moderate";
   }
   return "strong";
