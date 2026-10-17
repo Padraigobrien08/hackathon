@@ -7,7 +7,7 @@ Product: a normal AI chat that answers first and occasionally offers ONE optiona
 ## Stack (foundation: Vercel AI Chatbot template, github.com/vercel/ai-chatbot)
 - Next.js 16 (App Router) + React 19 + TypeScript, AI SDK 7 (`ai`, `@ai-sdk/react` `useChat`), Tailwind v4, shadcn/ui, **pnpm**.
 - Template infra: NextAuth guest sessions (`app/(auth)`, `proxy.ts` auto-redirects to guest login), Postgres via Drizzle (`lib/db`). Redis and Blob are optional; leave unset.
-- Model: OpenAI via `@ai-sdk/openai` (pinned 4.0.8 to match `ai@7.0.15`; don't bump one without the other). Chat `gpt-6.1-sol`, titles and coach `gpt-6-luna`, set in `lib/ai/models.ts` and `lib/reverse-alignment/observer.ts`. No AI Gateway, no Anthropic.
+- Model: OpenAI via `@ai-sdk/openai` (pinned 4.0.8 to match `ai@7.0.15`; don't bump one without the other). Chat, titles and coach all `gpt-6-luna`, set in `lib/ai/models.ts` and `lib/reverse-alignment/observer.ts`. No AI Gateway, no Anthropic.
 - Keep the template's chat UI, streaming, history and message actions. Add our layer on top; don't rebuild what the template already does.
 
 ## Where things live

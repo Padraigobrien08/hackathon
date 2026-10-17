@@ -1,5 +1,5 @@
 // Reverse Alignment: OpenAI only, called directly via @ai-sdk/openai (see lib/ai/providers.ts).
-export const DEFAULT_CHAT_MODEL = "gpt-6.1-sol";
+export const DEFAULT_CHAT_MODEL = "gpt-6-luna";
 
 export const titleModel = {
   description: "Fast model for title generation",
@@ -27,8 +27,8 @@ export type ChatModel = {
 export const chatModels: ChatModel[] = [
   {
     description: "Chat model",
-    id: "gpt-6.1-sol",
-    name: "GPT-6.1 Sol",
+    id: "gpt-6-luna",
+    name: "GPT-6 Luna",
     provider: "openai",
   },
 ];
