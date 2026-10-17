@@ -11,13 +11,22 @@ const LABELS: Record<PromptStrength, string> = {
   weak: "Weak prompt",
 };
 
-const DOT: Record<PromptStrength, string> = {
-  moderate: "bg-amber-500",
-  strong: "bg-emerald-500",
-  weak: "bg-rose-500",
+// Filled segments out of three, and their colour.
+const FILLED: Record<PromptStrength, number> = {
+  moderate: 2,
+  strong: 3,
+  weak: 1,
 };
 
-/** Opt-in weak/moderate/strong tier under a user prompt. Opens the settings panel, where it can be turned off. */
+const COLOR: Record<PromptStrength, string> = {
+  moderate: "bg-orange-500",
+  strong: "bg-emerald-500",
+  weak: "bg-red-500",
+};
+
+const SEGMENTS = [0, 1, 2];
+
+/** Weak/moderate/strong tier as a 3-segment bar under a user prompt. Opens the settings panel, where it can be turned off. */
 export function PromptStrengthBadge({ messageId }: { messageId: string }) {
   const { strengths, state, setSettingsOpen } = useCoach();
   const stored = strengths.get(messageId);
@@ -25,23 +34,31 @@ export function PromptStrengthBadge({ messageId }: { messageId: string }) {
   if (!stored || !state.prefs.showStrength) {
     return null;
   }
+  const label = `${LABELS[stored.strength]}${stored.scripted ? " (demo)" : ""}`;
   return (
     <button
-      className="flex w-fit items-center gap-1.5 rounded-md px-1 text-[11px] text-muted-foreground/80 hover:text-foreground"
+      aria-label={label}
+      className="-mt-1 flex w-fit items-center gap-1.5 rounded-md p-1 text-[10px] text-muted-foreground/60 hover:text-foreground"
       data-strength={stored.strength}
       data-testid="prompt-strength"
       onClick={open}
-      title="Based on task, context, what a good answer looks like, and focus. Turn off in How I'm helping."
+      title={`${label}. Based on task, context, what a good answer looks like, and focus. Turn off in How I'm helping.`}
       type="button"
     >
-      <span
-        aria-hidden
-        className={cn("size-1.5 rounded-full", DOT[stored.strength])}
-      />
-      {LABELS[stored.strength]}
-      {stored.scripted ? (
-        <span className="text-muted-foreground/60">· demo</span>
-      ) : null}
+      {stored.scripted ? <span>demo</span> : null}
+      <span aria-hidden className="flex gap-0.5">
+        {SEGMENTS.map((index) => (
+          <span
+            className={cn(
+              "h-1 w-6 rounded-full transition-colors",
+              index < FILLED[stored.strength]
+                ? COLOR[stored.strength]
+                : "bg-muted-foreground/15"
+            )}
+            key={index}
+          />
+        ))}
+      </span>
     </button>
   );
 }

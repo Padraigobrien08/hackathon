@@ -163,7 +163,7 @@ function Section({
   );
 }
 
-/** "How I'm helping": coaching controls. The only score is the opt-in prompt tier, shown on messages, not here. */
+/** "How I'm helping": coaching controls. The only score is the prompt tier (on by default), shown on messages, not here. */
 export function CollaborationSettings() {
   const { state, dispatch, settingsOpen, setSettingsOpen } = useCoach();
   const { prefs, signals } = state;
