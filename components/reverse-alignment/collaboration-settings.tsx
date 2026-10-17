@@ -37,7 +37,7 @@ const CATEGORY_LABELS: Record<CoachingCategory, string> = {
 
 const FREQUENCY_HINTS: Record<CoachingPreferences["frequency"], string> = {
   low: "Tips are rarer.",
-  normal: "At most one tip every few messages, and only when it would help.",
+  normal: "A tip whenever one would help.",
   off: "No tips. Answers are exactly the same either way.",
 };
 
