@@ -44,6 +44,18 @@ test("no tip: observer says none or is unsure", () => {
   );
 });
 
+test("a weak or moderate tier always shows its tip, even below the confidence bar", () => {
+  const unsure = { ...tip, confidence: 0.5 };
+  assert.equal(
+    shouldShowTip(unsure, prefs, signals, { ...plain, strength: "moderate" }),
+    true
+  );
+  assert.equal(
+    shouldShowTip(unsure, prefs, signals, { ...plain, strength: "strong" }),
+    false
+  );
+});
+
 test("one useful tip on the first eligible turn", () => {
   const s = coachReducer(INITIAL_STATE, {
     isSimple: false,

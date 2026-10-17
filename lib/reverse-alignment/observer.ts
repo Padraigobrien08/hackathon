@@ -4,6 +4,7 @@ import { openai } from "@ai-sdk/openai";
 import { generateText, Output } from "ai";
 import { z } from "zod";
 import { useMock } from "@/lib/ai/providers";
+import { fallbackTip } from "./fallback-tip";
 import {
   fixtureDecision,
   fixtureRubric,
@@ -39,7 +40,7 @@ Other categories: verification when a consequential claim should be checked befo
 
 Stay silent with category "none" when the request is simple or conversational; the answer was good anyway and the missing detail did not hurt it; the topic is sensitive, personal, health-related, or emotional; the same category was recently shown or dismissed; confidence is low; or the only possible advice is generic. A wrong tip is worse than no tip.
 
-Before choosing a tip, score the user's prompt in rubric on four dimensions, each 2 (clear), 1 (missing but the answer was fine anyway), 0 (missing AND it visibly hurt the answer), or null (not applicable): task (principle 1), context (principle 2), success_criteria (principle 3), efficiency (principle 4). A 0 needs evidence from the answer: hedging across cases, a consequential guess, padding, or a mismatch with what the user clearly wanted. Put one short phrase per 0 in evidence; if you can't point to evidence, score 1. Only give a tip for a dimension scored 0. Score simple, casual exchanges fairly: a clear one-line request is 2 on task.
+Before choosing a tip, score the user's prompt in rubric on four dimensions, each 2 (clear), 1 (missing but the answer was fine anyway), 0 (missing AND it visibly hurt the answer), or null (not applicable): task (principle 1), context (principle 2), success_criteria (principle 3), efficiency (principle 4). A 0 needs evidence from the answer: hedging across cases, a consequential guess, padding, or a mismatch with what the user clearly wanted. Put one short phrase per 0 in evidence; if you can't point to evidence, score 1. A tip is REQUIRED when any dimension scores 0 or two or more score 1: write it for the lowest-scored dimension, even if the topic is personal (the stay-silent rules above don't apply then). Otherwise prefer none. Score simple, casual exchanges fairly: a clear one-line request is 2 on task.
 
 Set answerBlocked to true only when the assistant could not attempt the task at all and its reply mainly asks the user for material they referred to but did not include (e.g. "these claims", "my code", "the article"). If it answered, even partially or with stated assumptions, set it to false.`;
 
@@ -123,15 +124,11 @@ export async function observe(
     });
     // Schema already limits each score to an integer 0-2 or null.
     const rubric = output.rubric as Rubric;
-    // A tip needs a dimension scored 0, so the tip never contradicts a "strong" tier.
-    const hasGap = [
-      rubric.task,
-      rubric.context,
-      rubric.success_criteria,
-      rubric.efficiency,
-    ].includes(0);
-    const decision: CoachingDecision =
-      hasGap && output.category !== "none" && output.insight?.trim()
+    const strength = promptStrength(rubric, { blocked: output.answerBlocked });
+    // Weak/moderate always comes with a tip saying why; strong never does, so the two can't contradict.
+    const tipRequired = strength !== "strong";
+    const decision: CoachingDecision = tipRequired
+      ? output.category !== "none" && output.insight?.trim()
         ? {
             assumedDetail: output.assumedDetail ?? undefined,
             category: output.category,
@@ -139,14 +136,15 @@ export async function observe(
             insight: clampInsight(output.insight),
             whyRelevant: output.whyRelevant ?? undefined,
           }
-        : NONE;
+        : fallbackTip(rubric, output.answerBlocked)
+      : NONE;
     return {
       decision,
       isSensitive: false,
       isSimple: false,
       rubric,
       source: "llm",
-      strength: promptStrength(rubric, { blocked: output.answerBlocked }),
+      strength,
     };
   } catch (error) {
     console.warn("[coach] observer failed, staying silent:", error);

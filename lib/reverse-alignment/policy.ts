@@ -3,6 +3,7 @@ import {
   type CoachingDecision,
   type CoachingPreferences,
   type LearningSignals,
+  type PromptStrength,
 } from "./types";
 
 // Illustrative guardrails (spec §6), not validated thresholds.
@@ -34,7 +35,11 @@ export function shouldShowTip(
   decision: CoachingDecision,
   prefs: CoachingPreferences,
   signals: LearningSignals,
-  context: { isSensitive: boolean; isSimple: boolean },
+  context: {
+    isSensitive: boolean;
+    isSimple: boolean;
+    strength?: PromptStrength;
+  },
   options: GateOptions = {}
 ) {
   if (!preGate(prefs, signals, options)) {
@@ -46,7 +51,13 @@ export function shouldShowTip(
   if (decision.category === "none") {
     return false;
   }
-  if (!decision.insight?.trim() || decision.confidence < MIN_CONFIDENCE) {
+  if (!decision.insight?.trim()) {
+    return false;
+  }
+  // A weak/moderate tier always shows its reason; otherwise the tip must clear the confidence bar.
+  const explainsTier =
+    context.strength === "weak" || context.strength === "moderate";
+  if (!explainsTier && decision.confidence < MIN_CONFIDENCE) {
     return false;
   }
   if (decision.category === "assumption" && !prefs.showAssumptions) {
