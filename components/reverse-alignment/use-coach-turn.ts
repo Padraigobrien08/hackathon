@@ -27,6 +27,36 @@ const RATE_TIMEOUT_MS = 8000; // above the rater's 6s server timeout
 // Ratings started on send, by user message id, so the post-answer coach reuses the scores the user sees.
 // null = the rating failed or returned no tier.
 const ratings = new Map<string, Promise<RateResponse | null>>();
+// Ratings made before sending (ask-back check), by prompt text, so the send reuses them instead of re-rating.
+const draftRatings = new Map<string, Promise<RateResponse | null>>();
+
+/** One prompt-only rating. Never throws: failure or no tier is null. */
+export function ratePromptText(
+  userText: string,
+  previousUserText?: string
+): Promise<RateResponse | null> {
+  const cached = draftRatings.get(userText);
+  if (cached) {
+    return cached;
+  }
+  const rating = fetch(
+    `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api/coach/rate`,
+    {
+      body: JSON.stringify({
+        previousUserMessage: previousUserText,
+        userMessage: userText,
+      }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+      signal: AbortSignal.timeout(RATE_TIMEOUT_MS),
+    }
+  )
+    .then((res) => (res.ok ? (res.json() as Promise<RateResponse>) : null))
+    .then((res) => (res?.strength ? res : null))
+    .catch(() => null);
+  draftRatings.set(userText, rating);
+  return rating;
+}
 
 /**
  * Rates the latest user prompt as it is SENT, alongside the answer, so the bar can show before
@@ -54,23 +84,14 @@ export function usePromptRating() {
       }
       const { id } = userMessage;
       setStrength(id, { scripted: false, strength: "pending" });
-      const rating = fetch(
-        `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api/coach/rate`,
-        {
-          body: JSON.stringify({
-            previousUserMessage: previousUserMessage
-              ? getTextFromMessage(previousUserMessage)
-              : undefined,
-            userMessage: userText,
-          }),
-          headers: { "Content-Type": "application/json" },
-          method: "POST",
-          signal: AbortSignal.timeout(RATE_TIMEOUT_MS),
-        }
-      )
-        .then((res) => (res.ok ? (res.json() as Promise<RateResponse>) : null))
-        .then((res) => (res?.strength ? res : null))
-        .catch(() => null);
+      // Reuses the pre-send check's rating when there was one; otherwise rates now.
+      const rating = ratePromptText(
+        userText,
+        previousUserMessage
+          ? getTextFromMessage(previousUserMessage)
+          : undefined
+      );
+      draftRatings.delete(userText);
       ratings.set(id, rating);
       rating.then((res) => {
         setStrength(

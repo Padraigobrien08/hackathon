@@ -46,6 +46,8 @@ export type RateRequest = { userMessage: string; previousUserMessage?: string };
 export type RateResponse = {
   rubric?: Rubric;
   strength?: PromptStrength; // absent on simple/sensitive prompts, unmatched mock prompts, and failure
+  /** Weak prompts only: one question to ask before answering, about the most useful missing detail. */
+  question?: string;
   source: "llm" | "fixture";
 };
 export type CoachResponse = {

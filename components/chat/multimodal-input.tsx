@@ -43,8 +43,9 @@ import {
   DEFAULT_CHAT_MODEL,
   type ModelCapabilities,
 } from "@/lib/ai/models";
+import { isSimple } from "@/lib/reverse-alignment/fixtures";
 import type { Attachment, ChatMessage } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, getTextFromMessage } from "@/lib/utils";
 import {
   PromptInput,
   PromptInputFooter,
@@ -52,6 +53,12 @@ import {
   PromptInputTextarea,
   PromptInputTools,
 } from "../ai-elements/prompt-input";
+import {
+  AskBackCard,
+  AskBackChecking,
+} from "../reverse-alignment/ask-back-card";
+import { useCoach } from "../reverse-alignment/coach-provider";
+import { ratePromptText } from "../reverse-alignment/use-coach-turn";
 import { Button } from "../ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { PaperclipIcon, StopIcon } from "./icons";
@@ -115,6 +122,10 @@ function PureMultimodalInput({
   const router = useRouter();
   const { setTheme, resolvedTheme } = useTheme();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // PromptFlip: a prompt rated weak gets one question before it's sent (skippable with "Just answer").
+  const { state: coachState } = useCoach();
+  const [askBack, setAskBack] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
   const { width } = useWindowSize();
   const hasAutoFocused = useRef(false);
   useEffect(() => {
@@ -400,7 +411,7 @@ function PureMultimodalInput({
     setSlashOpen(false);
   }, []);
 
-  const handlePromptSubmit = useCallback(() => {
+  const handlePromptSubmit = useCallback(async () => {
     if (input.startsWith("/")) {
       const query = input.slice(1).trim();
       const cmd = slashCommands.find((c) => c.name === query);
@@ -412,12 +423,50 @@ function PureMultimodalInput({
     if (!input.trim() && attachments.length === 0) {
       return;
     }
-    if (status === "ready" || status === "error") {
-      submitForm();
-    } else {
-      toast.error("Please wait for the model to finish its response!");
+    if (checking) {
+      return;
     }
-  }, [attachments.length, handleSlashSelect, input, status, submitForm]);
+    if (!(status === "ready" || status === "error")) {
+      toast.error("Please wait for the model to finish its response!");
+      return;
+    }
+    // Rate first (~1.5s). Weak: ask one question instead of sending; the draft stays in the box.
+    // The send below reuses this rating for the bar, so nothing is rated twice.
+    if (
+      coachState.prefs.showStrength &&
+      attachments.length === 0 &&
+      !isSimple(input)
+    ) {
+      const previousUser = messages.filter((m) => m.role === "user").at(-1);
+      setChecking(true);
+      const rating = await ratePromptText(
+        input,
+        previousUser ? getTextFromMessage(previousUser) : undefined
+      );
+      setChecking(false);
+      if (rating?.strength === "weak" && rating.question) {
+        setAskBack(rating.question);
+        textareaRef.current?.focus();
+        return;
+      }
+    }
+    setAskBack(null);
+    submitForm();
+  }, [
+    attachments.length,
+    checking,
+    coachState.prefs.showStrength,
+    handleSlashSelect,
+    input,
+    messages,
+    status,
+    submitForm,
+  ]);
+
+  const handleJustAnswer = useCallback(() => {
+    setAskBack(null);
+    submitForm();
+  }, [submitForm]);
 
   const handleTextareaKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -510,6 +559,11 @@ function PureMultimodalInput({
           />
         ) : null}
       </div>
+
+      {checking ? <AskBackChecking /> : null}
+      {askBack && !checking ? (
+        <AskBackCard onJustAnswer={handleJustAnswer} question={askBack} />
+      ) : null}
 
       <PromptInput
         className="[&>div]:rounded-2xl [&>div]:border [&>div]:border-border/30 [&>div]:bg-card/70 [&>div]:shadow-[var(--shadow-composer)] [&>div]:transition-shadow [&>div]:duration-300 [&>div]:focus-within:shadow-[var(--shadow-composer-focus)]"
