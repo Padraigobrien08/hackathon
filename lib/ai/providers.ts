@@ -1,4 +1,3 @@
-import { anthropic } from "@ai-sdk/anthropic";
 import { openai } from "@ai-sdk/openai";
 import { customProvider } from "ai";
 import { isTestEnvironment } from "../constants";
@@ -23,11 +22,9 @@ export const myProvider = useMock
     })()
   : null;
 
-// Real mode with only an OpenAI key: chat and titles use OpenAI instead of Claude.
-// The live demo chip (lib/reverse-alignment/live.ts) also uses it, even in mock mode.
+// OpenAI only. The live demo chip (lib/reverse-alignment/live.ts) uses this model even in mock mode.
 const OPENAI_CHAT_MODEL = "gpt-6-luna";
 const hasOpenAI = Boolean(process.env.OPENAI_API_KEY);
-const useOpenAIFallback = !process.env.ANTHROPIC_API_KEY && hasOpenAI;
 
 /** The model that actually answers, for labels and metrics. */
 export function answerModelId(modelId: string, live = false) {
@@ -37,7 +34,7 @@ export function answerModelId(modelId: string, live = false) {
   if (useMock) {
     return "mock";
   }
-  return useOpenAIFallback ? OPENAI_CHAT_MODEL : modelId;
+  return modelId;
 }
 
 export function getLanguageModel(modelId: string, live = false) {
@@ -47,19 +44,13 @@ export function getLanguageModel(modelId: string, live = false) {
   if (useMock && myProvider) {
     return myProvider.languageModel("chat-model");
   }
-  if (useOpenAIFallback) {
-    return openai(OPENAI_CHAT_MODEL);
-  }
 
-  return anthropic(modelId);
+  return openai(modelId);
 }
 
 export function getTitleModel() {
   if (useMock && myProvider) {
     return myProvider.languageModel("title-model");
   }
-  if (useOpenAIFallback) {
-    return openai(OPENAI_CHAT_MODEL);
-  }
-  return anthropic(titleModel.id);
+  return openai(titleModel.id);
 }

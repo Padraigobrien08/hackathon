@@ -207,7 +207,20 @@ export async function POST(request: Request) {
     const isReasoningModel = capabilities?.reasoning === true;
     const supportsTools = capabilities?.tools === true;
 
-    const modelMessages = await convertToModelMessages(uiMessages);
+    // Drop saved OpenAI item ids: otherwise the next request references an answer's
+    // reasoning item, which we never keep, and OpenAI rejects the whole turn (400).
+    const modelMessages = await convertToModelMessages(
+      uiMessages.map((m) => ({
+        ...m,
+        parts: m.parts.map((part) => {
+          if (!("providerMetadata" in part)) {
+            return part;
+          }
+          const { providerMetadata: _, ...rest } = part;
+          return rest;
+        }),
+      })) as ChatMessage[]
+    );
 
     const stream = createUIMessageStream({
       execute: async ({ writer: dataStream }) => {

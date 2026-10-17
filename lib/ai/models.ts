@@ -1,12 +1,12 @@
-// Reverse Alignment: Claude only, called directly via @ai-sdk/anthropic (see lib/ai/providers.ts).
-export const DEFAULT_CHAT_MODEL = "claude-sonnet-5-5";
+// Reverse Alignment: OpenAI only, called directly via @ai-sdk/openai (see lib/ai/providers.ts).
+export const DEFAULT_CHAT_MODEL = "gpt-6-luna";
 
 export const titleModel = {
   description: "Fast model for title generation",
   gatewayOrder: undefined as string[] | undefined,
-  id: "claude-haiku-5-5",
-  name: "Claude Haiku 5.5",
-  provider: "anthropic",
+  id: "gpt-6-luna",
+  name: "GPT-6 Luna",
+  provider: "openai",
 };
 
 export type ModelCapabilities = {
@@ -26,10 +26,10 @@ export type ChatModel = {
 
 export const chatModels: ChatModel[] = [
   {
-    description: "Fast, capable Claude model",
-    id: "claude-sonnet-5-5",
-    name: "Claude Sonnet 5.5",
-    provider: "anthropic",
+    description: "Chat model",
+    id: "gpt-6-luna",
+    name: "GPT-6 Luna",
+    provider: "openai",
   },
 ];
 

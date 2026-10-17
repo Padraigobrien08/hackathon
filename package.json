@@ -19,7 +19,6 @@
     "test": "export PLAYWRIGHT=True && pnpm exec playwright test"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^4.0.9",
     "@ai-sdk/openai": "4.0.8",
     "@ai-sdk/otel": "^1.0.15",
     "@ai-sdk/provider": "^4.0.2",
