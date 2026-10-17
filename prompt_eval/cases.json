@@ -97,5 +97,33 @@
     "userMessage": "Compare PostgreSQL and SQLite for a small offline desktop app. Give three trade-offs in a table and recommend one.",
     "assistantReply": "SQLite is the better fit for a small offline desktop app.",
     "expect": "none"
+  },
+  {
+    "id": "demo-email",
+    "principle": "context",
+    "userMessage": "Help me write an email asking my manager for Friday off",
+    "assistantReply": "Here's a short draft: ...",
+    "expect": "assumption"
+  },
+  {
+    "id": "demo-newsletter",
+    "principle": "context",
+    "userMessage": "Make me a plan for launching our team newsletter",
+    "assistantReply": "Here's a simple launch plan: ...",
+    "expect": "missing_context"
+  },
+  {
+    "id": "silence-thanks-a-lot",
+    "principle": "silence",
+    "userMessage": "thanks a lot!",
+    "assistantReply": "You're welcome!",
+    "expect": "none"
+  },
+  {
+    "id": "silence-hello-there",
+    "principle": "silence",
+    "userMessage": "hello there",
+    "assistantReply": "Hello! How can I help you today?",
+    "expect": "none"
   }
 ]

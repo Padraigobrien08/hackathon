@@ -6,13 +6,14 @@ const SENSITIVE =
   /\b(suicid\w*|self[- ]harm|kill myself|overdose|abus\w*|emergency|crisis|panic attack)/i;
 const ARITHMETIC = /^\s*(what(['’]?s| is)\s+)?[\d\s.%+\-*x×/÷()=]+\??\s*$/i;
 const GREETING_OR_ACKNOWLEDGEMENT =
-  /^(hi|hello|hey|thanks|thank you|thx|ok|okay|cool|great|nice|yes|no|sure|got it)[!.\s]*$/i;
+  /^(hi|hello|hey|thanks|thank you|thx|ok|okay|cool|great|nice|yes|no|sure|got it)( (there|a lot|so much|very much|again|all|everyone))?[!.\s]*$/i;
 const ACTION_OR_QUESTION =
   /\b(explain|write|summari[sz]e|compare|fix|find|list|give|make|create|draft|how|what|why|can|could|should|is|are|do|does)\b/i;
 const UNSEEN_MATERIAL =
   /\b(my|the|this) (code|error|script|function|policy|doc(ument)?)\b/i;
 const EXPLICIT_SUCCESS_CRITERIA =
-  /\b(\d+[ -]?words?|under \d+|as (a |an )?(table|list)|bullet points?|for (a |an )?[^.;,]+|tone|confident|not salesy|highlight|must pass|options? with trade-offs?)\b/i;
+  // Narrow on purpose: a bare "for ..." also matches demo prompts like "asking for Friday off".
+  /\b(\d+[ -]?words?|under \d+|(as|in) (a |an )?(table|list)|bullet points?|for (a |an )?(junior|senior|beginner|non-technical|technical) |tone|confident|not salesy|highlight|must pass|options? with trade-offs?)\b/i;
 
 export function isSensitive(text: string) {
   return SENSITIVE.test(text);
