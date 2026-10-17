@@ -19,6 +19,19 @@ import { useCoach } from "./coach-provider";
 
 const COACH_TIMEOUT_MS = 8000;
 
+// Fire-and-forget analytics (app/(chat)/api/prompt-metrics). Never awaited, never surfaces errors.
+function recordPromptMetric(
+  userMessageId: string,
+  assistantMessageId: string,
+  assistantReply: string
+) {
+  fetch(`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api/prompt-metrics`, {
+    body: JSON.stringify({ assistantMessageId, assistantReply, userMessageId }),
+    headers: { "Content-Type": "application/json" },
+    method: "POST",
+  }).catch(() => undefined);
+}
+
 type FinishInfo = {
   message: ChatMessage;
   messages: ChatMessage[];
@@ -59,6 +72,9 @@ export function useCoachTurn() {
         ? getTextFromMessage(previousUserMessage)
         : undefined;
       const replyText = getTextFromMessage(message);
+      if (userMessage && replyText.trim()) {
+        recordPromptMetric(userMessage.id, message.id, replyText);
+      }
 
       // The styles this answer was written with (sent with the request), for the "Adapted" chip.
       const { confirmedStyles } = stateRef.current.prefs;
