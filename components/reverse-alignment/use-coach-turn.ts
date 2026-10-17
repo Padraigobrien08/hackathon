@@ -32,6 +32,18 @@ function recordPromptMetric(
   }).catch(() => undefined);
 }
 
+function persistInsight(
+  chatId: string,
+  assistantMessageId: string,
+  insight: { decision: CoachResponse["decision"]; scripted: boolean }
+) {
+  fetch(`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api/coach/insights`, {
+    body: JSON.stringify({ assistantMessageId, chatId, ...insight }),
+    headers: { "Content-Type": "application/json" },
+    method: "POST",
+  }).catch(() => undefined);
+}
+
 type FinishInfo = {
   message: ChatMessage;
   messages: ChatMessage[];
@@ -44,7 +56,7 @@ type FinishInfo = {
  * Runs AFTER an answer has finished streaming. Best-effort: any failure means no tip,
  * and nothing here can delay or break the answer itself.
  */
-export function useCoachTurn() {
+export function useCoachTurn(chatId: string) {
   const {
     state,
     dispatch,
@@ -164,12 +176,14 @@ export function useCoachTurn() {
       ) {
         return;
       }
-      setInsight(message.id, {
+      const insight = {
         decision: response.decision,
         scripted: response.source === "fixture" || demo,
-      });
+      };
+      setInsight(message.id, insight);
+      persistInsight(chatId, message.id, insight);
       dispatch({ category: response.decision.category, type: "TIP_SHOWN" });
     },
-    [demo, dispatch, setAdaptation, setInsight, setOffer, setStrength]
+    [chatId, demo, dispatch, setAdaptation, setInsight, setOffer, setStrength]
   );
 }

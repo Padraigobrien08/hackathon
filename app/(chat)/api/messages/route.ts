@@ -1,5 +1,9 @@
 import { auth } from "@/app/(auth)/auth";
-import { getChatById, getMessagesByChatId } from "@/lib/db/queries";
+import {
+  getChatById,
+  getCoachInsightsByChatId,
+  getMessagesByChatId,
+} from "@/lib/db/queries";
 import { convertToUIMessages } from "@/lib/utils";
 
 export async function GET(request: Request) {
@@ -33,8 +37,12 @@ export async function GET(request: Request) {
   }
 
   const isReadonly = !session?.user || session.user.id !== chat.userId;
+  const coachInsights = isReadonly
+    ? []
+    : await getCoachInsightsByChatId({ chatId });
 
   return Response.json({
+    coachInsights,
     isReadonly,
     messages: convertToUIMessages(messages),
     userId: chat.userId,

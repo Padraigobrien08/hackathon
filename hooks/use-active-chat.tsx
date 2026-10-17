@@ -21,7 +21,10 @@ import { useDataStream } from "@/components/chat/data-stream-provider";
 import { getChatHistoryPaginationKey } from "@/components/chat/sidebar-history";
 import { toast } from "@/components/chat/toast";
 import type { VisibilityType } from "@/components/chat/visibility-selector";
-import { useCoach } from "@/components/reverse-alignment/coach-provider";
+import {
+  type StoredInsight,
+  useCoach,
+} from "@/components/reverse-alignment/coach-provider";
 import { useCoachTurn } from "@/components/reverse-alignment/use-coach-turn";
 import { useAutoResume } from "@/hooks/use-auto-resume";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
@@ -81,9 +84,10 @@ export function ActiveChatProvider({ children }: { children: ReactNode }) {
     currentModelIdRef.current = currentModelId;
   }, [currentModelId]);
 
-  const onCoachTurn = useCoachTurn();
+  const onCoachTurn = useCoachTurn(chatId);
   // User-approved styles only. A ref, because the transport below is created once.
-  const { confirmedStyles } = useCoach().state.prefs;
+  const { state: coachState, replaceInsights } = useCoach();
+  const { confirmedStyles } = coachState.prefs;
   const preferencesRef = useRef(confirmedStyles);
   useEffect(() => {
     preferencesRef.current = confirmedStyles;
@@ -208,6 +212,29 @@ export function ActiveChatProvider({ children }: { children: ReactNode }) {
       setMessages(chatData.messages);
     }
   }, [chatId, chatData?.messages, setMessages]);
+
+  useEffect(() => {
+    if (isNewChat) {
+      replaceInsights(new Map());
+      return;
+    }
+    if (chatData?.coachInsights) {
+      replaceInsights(
+        new Map(
+          chatData.coachInsights.map(
+            (insight: {
+              assistantMessageId: string;
+              decision: StoredInsight["decision"];
+              scripted: boolean;
+            }) => [
+              insight.assistantMessageId,
+              { decision: insight.decision, scripted: insight.scripted },
+            ]
+          )
+        )
+      );
+    }
+  }, [chatData?.coachInsights, isNewChat, replaceInsights]);
 
   const prevChatIdRef = useRef(chatId);
   useEffect(() => {

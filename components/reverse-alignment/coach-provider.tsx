@@ -37,9 +37,10 @@ export type StoredStrength = {
 type CoachContextValue = {
   state: CoachState;
   dispatch: (event: CoachEvent) => void;
-  /** Tips by assistant message id. Browser-only: never saved with the chat. null = dismissed. */
+  /** Tips by assistant message id. Persisted per chat; null = dismissed. */
   insights: ReadonlyMap<string, StoredInsight | null>;
   setInsight: (messageId: string, insight: StoredInsight | null) => void;
+  replaceInsights: (insights: Map<string, StoredInsight>) => void;
   /** "Remember this?" offers by assistant message id. Replace the tip on that turn. null = answered. */
   offers: ReadonlyMap<string, PreferenceOffer | null>;
   setOffer: (messageId: string, offer: PreferenceOffer | null) => void;
@@ -93,7 +94,18 @@ export function CoachProvider({ children }: { children: ReactNode }) {
   const setInsight = useCallback(
     (messageId: string, insight: StoredInsight | null) => {
       setInsights((prev) => new Map(prev).set(messageId, insight));
+      if (insight === null) {
+        fetch(
+          `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api/coach/insights?assistantMessageId=${encodeURIComponent(messageId)}`,
+          { method: "DELETE" }
+        ).catch(() => undefined);
+      }
     },
+    []
+  );
+
+  const replaceInsights = useCallback(
+    (persisted: Map<string, StoredInsight>) => setInsights(persisted),
     []
   );
 
@@ -125,6 +137,7 @@ export function CoachProvider({ children }: { children: ReactNode }) {
       dispatch,
       insights,
       offers,
+      replaceInsights,
       setAdaptation,
       setInsight,
       setOffer,
@@ -140,6 +153,7 @@ export function CoachProvider({ children }: { children: ReactNode }) {
       dispatch,
       insights,
       offers,
+      replaceInsights,
       setAdaptation,
       setInsight,
       setOffer,

@@ -22,6 +22,7 @@ import { generateUUID } from "../utils";
 import {
   type Chat,
   chat,
+  coachInsight,
   type DBMessage,
   document,
   message,
@@ -486,6 +487,9 @@ export async function deleteMessagesByChatIdAfterTimestamp({
 
     if (messageIds.length > 0) {
       await db
+        .delete(coachInsight)
+        .where(inArray(coachInsight.assistantMessageId, messageIds));
+      await db
         .delete(vote)
         .where(
           and(eq(vote.chatId, chatId), inArray(vote.messageId, messageIds))
@@ -497,6 +501,72 @@ export async function deleteMessagesByChatIdAfterTimestamp({
           and(eq(message.chatId, chatId), inArray(message.id, messageIds))
         );
     }
+  } catch (error) {
+    throw new ChatbotError("bad_request:database", { cause: error });
+  }
+}
+
+// Reverse Alignment: displayed tips. Idempotent per assistant message so retries
+// after stream completion cannot create duplicates.
+export async function saveCoachInsight(
+  insight: typeof coachInsight.$inferInsert
+) {
+  try {
+    return await db
+      .insert(coachInsight)
+      .values(insight)
+      .onConflictDoUpdate({
+        set: {
+          chatId: insight.chatId,
+          decision: insight.decision,
+          scripted: insight.scripted,
+        },
+        target: coachInsight.assistantMessageId,
+      })
+      .returning();
+  } catch (error) {
+    throw new ChatbotError("bad_request:database", { cause: error });
+  }
+}
+
+export async function getCoachInsightsByChatId({ chatId }: { chatId: string }) {
+  try {
+    return await db
+      .select()
+      .from(coachInsight)
+      .where(eq(coachInsight.chatId, chatId))
+      .orderBy(asc(coachInsight.createdAt));
+  } catch (error) {
+    throw new ChatbotError("bad_request:database", { cause: error });
+  }
+}
+
+export async function getCoachInsightByMessageId({
+  assistantMessageId,
+}: {
+  assistantMessageId: string;
+}) {
+  try {
+    const [insight] = await db
+      .select()
+      .from(coachInsight)
+      .where(eq(coachInsight.assistantMessageId, assistantMessageId))
+      .limit(1);
+    return insight ?? null;
+  } catch (error) {
+    throw new ChatbotError("bad_request:database", { cause: error });
+  }
+}
+
+export async function deleteCoachInsight({
+  assistantMessageId,
+}: {
+  assistantMessageId: string;
+}) {
+  try {
+    return await db
+      .delete(coachInsight)
+      .where(eq(coachInsight.assistantMessageId, assistantMessageId));
   } catch (error) {
     throw new ChatbotError("bad_request:database", { cause: error });
   }

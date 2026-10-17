@@ -12,6 +12,7 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
+import type { CoachingDecision } from "@/lib/reverse-alignment/types";
 
 export const user = pgTable("User", {
   createdAt: timestamp("createdAt").notNull().defaultNow(),
@@ -53,6 +54,20 @@ export const message = pgTable("Message_v2", {
 });
 
 export type DBMessage = InferSelectModel<typeof message>;
+
+// A displayed coaching tip, persisted separately from Message_v2 because coaching
+// finishes after the answer stream and must never delay or change that answer.
+export const coachInsight = pgTable("CoachInsight", {
+  assistantMessageId: uuid("assistantMessageId").primaryKey().notNull(),
+  chatId: uuid("chatId")
+    .notNull()
+    .references(() => chat.id, { onDelete: "cascade" }),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  decision: json("decision").$type<CoachingDecision>().notNull(),
+  scripted: boolean("scripted").notNull().default(false),
+});
+
+export type CoachInsight = InferSelectModel<typeof coachInsight>;
 
 export const vote = pgTable(
   "Vote_v2",
