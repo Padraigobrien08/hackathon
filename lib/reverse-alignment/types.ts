@@ -37,6 +37,16 @@ export type CoachRequest = {
   userMessage: string;
   assistantReply: string;
   previousUserMessage?: string;
+  /** Scores already shown to the user (rated on send). The coach keeps them, so the tip matches the bar. */
+  rating?: Rubric;
+};
+
+/** POST /api/coach/rate: prompt-only rating, sent alongside the chat request so the bar can show before the answer ends. */
+export type RateRequest = { userMessage: string; previousUserMessage?: string };
+export type RateResponse = {
+  rubric?: Rubric;
+  strength?: PromptStrength; // absent on simple/sensitive prompts, unmatched mock prompts, and failure
+  source: "llm" | "fixture";
 };
 export type CoachResponse = {
   decision: CoachingDecision;
