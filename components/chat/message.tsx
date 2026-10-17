@@ -1,6 +1,7 @@
 "use client";
 import type { UseChatHelpers } from "@ai-sdk/react";
 import { useCallback } from "react";
+import { MessageInsight } from "@/components/reverse-alignment/message-insight";
 import type { Vote } from "@/lib/db/schema";
 import type { ChatMessage } from "@/lib/types";
 import { cn, sanitizeText } from "@/lib/utils";
@@ -359,6 +360,7 @@ const PurePreviewMessage = ({
       {attachments}
       {parts}
       {actions}
+      {isAssistant && !isLoading && <MessageInsight messageId={message.id} />}
     </>
   );
 

@@ -1,17 +1,16 @@
 "use client";
 
 import { PanelLeftIcon } from "lucide-react";
-import Link from "next/link";
 import { memo } from "react";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
-import { VercelIcon } from "./icons";
-import { VisibilitySelector, type VisibilityType } from "./visibility-selector";
+import type { VisibilityType } from "./visibility-selector";
 
+// Props kept for the memo comparison below; the visibility selector is hidden for the demo.
 function PureChatHeader({
-  chatId,
-  selectedVisibilityType,
-  isReadonly,
+  chatId: _chatId,
+  selectedVisibilityType: _selectedVisibilityType,
+  isReadonly: _isReadonly,
 }: {
   chatId: string;
   selectedVisibilityType: VisibilityType;
@@ -34,35 +33,7 @@ function PureChatHeader({
         <PanelLeftIcon className="size-4" />
       </Button>
 
-      <Link
-        className="flex size-8 items-center justify-center rounded-lg md:hidden"
-        href="https://vercel.com/templates/next.js/chatbot"
-        rel="noopener noreferrer"
-        target="_blank"
-      >
-        <VercelIcon size={14} />
-      </Link>
-
-      {!isReadonly && (
-        <VisibilitySelector
-          chatId={chatId}
-          selectedVisibilityType={selectedVisibilityType}
-        />
-      )}
-
-      <Button
-        asChild
-        className="hidden rounded-lg bg-foreground px-4 text-background hover:bg-foreground/90 md:ml-auto md:flex"
-      >
-        <Link
-          href="https://vercel.com/templates/next.js/chatbot"
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          <VercelIcon size={16} />
-          Deploy with Vercel
-        </Link>
-      </Button>
+      <span className="font-medium text-sm">Reverse Alignment</span>
     </header>
   );
 }

@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import { AppSidebar } from "@/components/chat/app-sidebar";
 import { DataStreamProvider } from "@/components/chat/data-stream-provider";
 import { ChatShell } from "@/components/chat/shell";
+import { CoachProvider } from "@/components/reverse-alignment/coach-provider";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { ActiveChatProvider } from "@/hooks/use-active-chat";
 import { auth } from "../(auth)/auth";
@@ -42,9 +43,11 @@ async function SidebarShell({ children }: { children: React.ReactNode }) {
           }}
         />
         <Suspense fallback={<div className="flex h-dvh" />}>
-          <ActiveChatProvider>
-            <ChatShell />
-          </ActiveChatProvider>
+          <CoachProvider>
+            <ActiveChatProvider>
+              <ChatShell />
+            </ActiveChatProvider>
+          </CoachProvider>
         </Suspense>
         {children}
       </SidebarInset>

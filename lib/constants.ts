@@ -12,9 +12,10 @@ export const guestRegex = /^guest-\d+$/;
 
 export const DUMMY_PASSWORD = generateDummyPassword();
 
+// Reverse Alignment demo prompts (match the coach fixtures in lib/reverse-alignment/fixtures.ts).
 export const suggestions = [
-  "What are the advantages of using Next.js?",
-  "Write code to demonstrate Dijkstra's algorithm",
-  "Help me write an essay about Silicon Valley",
-  "What is the weather in San Francisco?",
+  "Help me write an email asking my manager for Friday off",
+  "Compare these two claims and tell me which is right",
+  "Make me a plan for launching our team newsletter",
+  "What's 8 × 9?",
 ];

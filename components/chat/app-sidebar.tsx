@@ -91,7 +91,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                 <SidebarMenuButton
                   asChild
                   className="size-8 !px-0 items-center justify-center group-data-[collapsible=icon]:group-hover/logo:opacity-0"
-                  tooltip="Chatbot"
+                  tooltip="Reverse Alignment"
                 >
                   <Link href="/" onClick={closeMobile}>
                     <MessageSquareIcon className="size-4 text-sidebar-foreground/50" />
