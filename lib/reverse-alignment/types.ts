@@ -93,7 +93,9 @@ export type LearningSignals = {
   correctionLog: Partial<Record<StyleKind, CorrectionEvidence[]>>;
 };
 
-export const COOLDOWN = { low: 5, normal: 3 } as const;
+// Eligible turns required between tips. "normal" has none: every turn that warrants a tip gets one.
+// "Fewer" (low) is the user's own opt-in to spacing tips out.
+export const COOLDOWN = { low: 5, normal: 0 } as const;
 
 export const DEFAULT_PREFERENCES: CoachingPreferences = {
   confirmedStyles: {},
@@ -108,6 +110,6 @@ export const DEFAULT_SIGNALS: LearningSignals = {
   correctionLog: {},
   dismissedCategories: [],
   recentCategoriesShown: [],
-  // Start AT the cooldown so the first eligible turn can show a tip (otherwise nothing before turn 4).
+  // Start AT the cooldown so the first eligible turn can show a tip.
   turnsSinceLastTip: COOLDOWN.normal,
 };
