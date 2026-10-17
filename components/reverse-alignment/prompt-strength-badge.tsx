@@ -17,7 +17,7 @@ const DOT: Record<PromptStrength, string> = {
   weak: "bg-rose-500",
 };
 
-/** Opt-in weak/moderate/strong tier under a user prompt. Opens the settings panel, where it can be turned off. */
+/** Weak/moderate/strong tier under a user prompt. Opens the settings panel, where it can be turned off. */
 export function PromptStrengthBadge({ messageId }: { messageId: string }) {
   const { strengths, state, setSettingsOpen } = useCoach();
   const stored = strengths.get(messageId);

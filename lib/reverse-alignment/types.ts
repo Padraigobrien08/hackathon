@@ -29,7 +29,7 @@ export type Rubric = {
   evidence: string[]; // one short phrase per 0
 };
 
-/** User-facing tier, derived in code from the rubric (never by the LLM). Opt-in: see showStrength. */
+/** User-facing tier, derived in code from the rubric (never by the LLM). On by default: see showStrength. */
 export type PromptStrength = "weak" | "moderate" | "strong";
 
 /** POST /api/coach — the last exchange plus optional prior request. Call AFTER the answer finishes streaming. */
@@ -69,7 +69,7 @@ export type CoachingPreferences = {
   enabled: boolean;
   frequency: "off" | "low" | "normal";
   showAssumptions: boolean;
-  /** Show a weak/moderate/strong tier on each prompt. Off by default. */
+  /** Show a weak/moderate/strong tier on each prompt. On by default; the user can turn it off. */
   showStrength: boolean;
   confirmedStyles: ConfirmedStyles;
 };
@@ -90,7 +90,7 @@ export const DEFAULT_PREFERENCES: CoachingPreferences = {
   enabled: true,
   frequency: "normal",
   showAssumptions: true,
-  showStrength: false,
+  showStrength: true,
 };
 
 export const DEFAULT_SIGNALS: LearningSignals = {
