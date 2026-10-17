@@ -97,7 +97,7 @@ export function CoachProvider({ children }: { children: ReactNode }) {
       if (insight === null) {
         fetch(
           `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api/coach/insights?assistantMessageId=${encodeURIComponent(messageId)}`,
-          { method: "DELETE" }
+          { keepalive: true, method: "DELETE" }
         ).catch(() => undefined);
       }
     },

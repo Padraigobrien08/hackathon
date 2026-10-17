@@ -1,30 +1,21 @@
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { ManagerDashboard } from "@/components/reverse-alignment/manager-dashboard";
 import { loadDashboard } from "@/lib/reverse-alignment/dashboard-data";
 
 export const metadata = { title: "Prompting overview · Reverse Alignment" };
 
-// Outside the (chat) group so the chat shell doesn't render behind it. ?data=live|sample picks the data set.
-export default function DashboardPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ data?: string }>;
-}) {
+// Outside the (chat) group so the chat shell doesn't render behind it.
+export default function DashboardPage() {
   return (
     <Suspense fallback={<div className="min-h-dvh bg-background" />}>
-      <DashboardContent searchParams={searchParams} />
+      <DashboardContent />
     </Suspense>
   );
 }
 
-async function DashboardContent({
-  searchParams,
-}: {
-  searchParams: Promise<{ data?: string }>;
-}) {
-  const { data } = await searchParams;
-  const dashboard = await loadDashboard(
-    data === "live" || data === "sample" ? data : undefined
-  );
-  return <ManagerDashboard data={dashboard} />;
+async function DashboardContent() {
+  // Render per request: the demo data is dated relative to today.
+  await connection();
+  return <ManagerDashboard data={loadDashboard()} />;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftIcon, InfoIcon } from "lucide-react";
+import { ArrowLeftIcon } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useState } from "react";
 import {
@@ -13,18 +13,18 @@ import { cn } from "@/lib/utils";
 
 // Chart colours: validated ordinal blue ramp (dataviz reference palette), same steps in light and dark.
 const VIZ_STYLE = `
-.ra-viz { --series-1: #2a78d6; --q-weak: #86b6ef; --q-reasonable: #3987e5; --q-strong: #1c5cab;
+.ra-viz { --series-1: #2a78d6; --q-weak: #86b6ef; --q-moderate: #3987e5; --q-strong: #1c5cab;
   --ord-1: #86b6ef; --ord-2: #5598e7; --ord-3: #2a78d6; --ord-4: #1c5cab; --grid: #e1e0d9; --baseline: #c3c2b7; }
 .dark .ra-viz { --series-1: #3987e5; --grid: #2c2c2a; --baseline: #383835; }
 `;
 
 const QUALITY_COLOR: Record<QualityClass, string> = {
-  reasonable: "var(--q-reasonable)",
+  moderate: "var(--q-moderate)",
   strong: "var(--q-strong)",
   weak: "var(--q-weak)",
 };
 const QUALITY_LABEL: Record<QualityClass, string> = {
-  reasonable: "Reasonable",
+  moderate: "Moderate",
   strong: "Strong",
   weak: "Weak",
 };
@@ -59,11 +59,7 @@ const shortDate = (iso: string) =>
 const GATE_PENDING = "Waiting for the worth-responding check";
 const EVALUATOR_PENDING = "Waiting for the prompt evaluator";
 
-export function ManagerDashboard({
-  data,
-}: {
-  data: DashboardData & { liveRows: number };
-}) {
+export function ManagerDashboard({ data }: { data: DashboardData }) {
   const { totals, gate, quality } = data;
   const pricingName = PRICING_MODEL.replace("gpt-6-", "GPT-6 ").replace(
     /\b\w/g,
@@ -91,20 +87,10 @@ export function ManagerDashboard({
               the AI has to ask for more, and what vague prompts cost.
             </p>
           </div>
-          <DataToggle liveRows={data.liveRows} source={data.source} />
+          <span className="text-muted-foreground text-sm">
+            Last {num(totals.days, 0)} days · {num(totals.people, 0)} people
+          </span>
         </header>
-
-        {data.source === "sample" ? (
-          <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm">
-            <InfoIcon className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
-            <span>
-              <strong className="font-medium">Sample data.</strong> Six
-              fictional people over 14 days, including mock quality classes
-              until the prompt evaluator is connected. Switch to Live once real
-              prompts have been recorded ({data.liveRows} so far).
-            </span>
-          </div>
-        ) : null}
 
         <section className="grid gap-3 lg:grid-cols-3">
           <Card
@@ -131,7 +117,7 @@ export function ManagerDashboard({
             )}
           </Card>
           <Card
-            subtitle="Spend on prompts the AI had to ask about before it could answer"
+            subtitle={`Spend on prompts the AI had to ask about before it could answer, last ${num(totals.days, 0)} days`}
             title="Cost of vague prompts"
           >
             {gate.vaguePromptSpendUsd === null ? (
@@ -153,6 +139,7 @@ export function ManagerDashboard({
                       />
                     </div>
                     <span className="text-muted-foreground text-sm">
+                      {usd(gate.vaguePromptSpendUsd / totals.days)} a day.{" "}
                       {pct(gate.vaguePromptShare)} of all spend went on prompts
                       that needed clarifying first
                     </span>
@@ -237,41 +224,6 @@ export function ManagerDashboard({
   );
 }
 
-function DataToggle({
-  source,
-  liveRows,
-}: {
-  source: DashboardData["source"];
-  liveRows: number;
-}) {
-  const options = [
-    { href: "/dashboard?data=sample", key: "sample", label: "Sample" },
-    { href: "/dashboard?data=live", key: "live", label: `Live (${liveRows})` },
-  ] as const;
-  return (
-    <nav
-      aria-label="Data set"
-      className="flex w-fit rounded-lg border border-border bg-card p-0.5 text-sm"
-    >
-      {options.map((o) => (
-        <Link
-          aria-current={source === o.key ? "page" : undefined}
-          className={cn(
-            "rounded-md px-3 py-1 transition-colors",
-            source === o.key
-              ? "bg-muted font-medium text-foreground"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-          href={o.href}
-          key={o.key}
-        >
-          {o.label}
-        </Link>
-      ))}
-    </nav>
-  );
-}
-
 function Card({
   title,
   subtitle,
@@ -323,7 +275,7 @@ function Empty({ children }: { children: React.ReactNode }) {
   return <p className="text-muted-foreground text-sm">{children}</p>;
 }
 
-// Weak | Reasonable | Strong track with a marker at the average (score 0–2).
+// Weak | Moderate | Strong track with a marker at the average (score 0–2).
 function QualityScale({
   score,
   compact = false,
@@ -360,7 +312,7 @@ function QualityScale({
       {compact ? null : (
         <div className="grid grid-cols-3 text-muted-foreground text-xs">
           <span>Weak</span>
-          <span className="text-center">Reasonable</span>
+          <span className="text-center">Moderate</span>
           <span className="text-right">Strong</span>
         </div>
       )}
@@ -384,7 +336,7 @@ function Legend() {
   );
 }
 
-// One 100% bar: strong | reasonable | weak, with direct labels underneath.
+// One 100% bar: strong | moderate | weak, with direct labels underneath.
 function QualityMix({
   distribution,
 }: {
