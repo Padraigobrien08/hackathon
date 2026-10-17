@@ -1,46 +1,32 @@
-# Hackathon Starter
+# Reverse Alignment
 
-FastAPI backend + React (Vite) frontend, already wired together. Works in **mock mode** with no API key, so everyone can build straight away.
+An AI assistant that answers your request first, and occasionally offers one optional tip to help you work better with AI. Built on the [Vercel AI Chatbot](https://github.com/vercel/ai-chatbot) template, using Claude via `@ai-sdk/anthropic`.
 
-## Run it (everyone, tonight)
+Plan, systems and owners: [PLAN.md](PLAN.md). Rules for Claude Code: [CLAUDE.md](CLAUDE.md).
 
-Needs: [uv](https://docs.astral.sh/uv/) and Node 20+.
+## Run it
+
+Needs Node 20+, pnpm, and Docker (for local Postgres).
 
 ```bash
-./dev.sh
+docker run -d --name ra-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=chatbot -p 5432:5432 postgres:16-alpine
+cp .env.example .env.local      # then set AUTH_SECRET: openssl rand -base64 32
+pnpm install
+pnpm db:migrate
+pnpm dev
 ```
 
-- Frontend: http://localhost:5173
-- Backend: http://localhost:8000 (API docs at http://localhost:8000/docs)
+Open http://localhost:3000. You're signed in automatically as a guest. With `USE_MOCK=1` (the default) you get canned answers without an API key.
 
-If you see a page, type a question, and get a `[mock]` answer back, you're set.
+Already have the container? `docker start ra-postgres`. Port 3000 taken? `PORT=3001 pnpm dev`.
 
 ## Turn on real Claude
 
-In `backend/.env`: set `USE_MOCK=0` and `ANTHROPIC_API_KEY=...`. Only the person with the key needs this; everyone else can stay on mock.
+In `.env.local`: `USE_MOCK=0` and `ANTHROPIC_API_KEY=...`. Only the person with the key needs this.
 
-## The contract (don't change without telling the team)
+## Checks
 
+```bash
+pnpm exec tsc --noEmit   # typecheck
+pnpm check               # lint (Biome)
 ```
-POST /api/ask
-  request:  { question: string, context?: string }
-  response: { answer: string, sources: {title, snippet}[], mock: boolean }
-```
-
-Defined in `backend/app/main.py` (Pydantic) and mirrored in `frontend/src/api.ts`. Add new endpoints the same way: write the types in both places **first**, return fake data, then make it real.
-
-## Who owns what
-
-| Area | Files | Owner |
-|---|---|---|
-| AI / backend logic | `backend/app/llm.py`, `backend/app/main.py` | |
-| UI | `frontend/src/App.tsx`, `index.css` | |
-| Demo + pitch | demo inputs, slides, backup video | |
-
-## Rules for the day
-
-1. Commit small and often; `git pull --rebase` before pushing.
-2. Work on `main` for speed, but **only touch your own files** where possible.
-3. Get the front end and backend running together on real data by **13:30**.
-4. **15:00 = feature freeze.** Only bug fixes and demo polish after that.
-5. Hardcode freely. Fake anything that isn't the core demo.

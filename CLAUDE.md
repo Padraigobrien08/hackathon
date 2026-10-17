@@ -1,28 +1,42 @@
-# Hackathon project
+# Hackathon project: Reverse Alignment
 
 6-hour hackathon (Edinburgh AI, Sat 17 Oct). Hacking 10:00–16:00, judging after.
-**Priority: a working, demoable feature over clean code.** No refactors, no tests, hardcoding is fine.
+**Priority: a working, demoable feature over clean code.** No refactors, hardcoding is fine.
+Product: a normal AI chat that answers first and occasionally offers ONE optional collaboration tip (or stays silent). See `PLAN.md`.
 
-## Stack
-- Backend: FastAPI, Python 3.12, managed with `uv` — `backend/app/main.py` (routes + Pydantic contract), `backend/app/llm.py` (all LLM calls).
-- Frontend: React + TypeScript + Vite + Tailwind v4 + shadcn/ui — `frontend/src/App.tsx`, `frontend/src/api.ts` (typed client mirroring the Pydantic models).
-- UI: use shadcn components from `@/components/ui` (button, card, input, textarea, badge, skeleton, alert, sonner, tabs installed). Add more with `cd frontend && npx shadcn@latest add <name>`; don't hand-write components shadcn already has. Style with Tailwind classes, not custom CSS.
-- Vite proxies `/api/*` to `localhost:8000`; frontend always calls relative `/api/...` URLs.
+## Stack (foundation: Vercel AI Chatbot template, github.com/vercel/ai-chatbot)
+- Next.js 16 (App Router) + React 19 + TypeScript, AI SDK 7 (`ai`, `@ai-sdk/react` `useChat`), Tailwind v4, shadcn/ui, **pnpm**.
+- Template infra: NextAuth guest sessions (`app/(auth)`, `proxy.ts` auto-redirects to guest login), Postgres via Drizzle (`lib/db`). Redis and Blob are optional; leave unset.
+- Model: Claude via `@ai-sdk/anthropic` (pinned 4.0.9 to match `ai@7.0.15`; don't bump one without the other). Chat `claude-sonnet-5-5`, titles `claude-haiku-5-5`, set in `lib/ai/models.ts`. No AI Gateway.
+- Keep the template's chat UI, streaming, history and message actions. Add our layer on top; don't rebuild what the template already does.
+
+## Where things live
+| What | Path |
+|---|---|
+| Chat route (streamText, system prompt, saves messages) | `app/(chat)/api/chat/route.ts`, request schema `schema.ts` |
+| System prompt | `lib/ai/prompts.ts` (`systemPrompt`, `regularPrompt`) |
+| Model selection / mock models | `lib/ai/providers.ts`, `lib/ai/models.ts`, `lib/ai/models.mock.ts` |
+| Message rendering (insight card goes under the assistant message) | `components/chat/message.tsx`, `messages.tsx`, `message-actions.tsx` |
+| Empty-state suggestions (use our demo prompts) | `lib/constants.ts` (`suggestions`) |
+| **Our code** | `app/(chat)/api/coach/route.ts`, `lib/reverse-alignment/*` (types, observer, policy, session-state, preference-detector, fixtures), `components/reverse-alignment/*` (insight-card, collaboration-settings) |
 
 ## Run
-- `./dev.sh` — starts backend (:8000) and frontend (:5173).
-- Backend only: `cd backend && uv run uvicorn app.main:app --reload --port 8000`
-- Typecheck frontend: `cd frontend && npx tsc -b`
-- `USE_MOCK=1` in `backend/.env` returns fake LLM answers (default). `USE_MOCK=0` + `ANTHROPIC_API_KEY` uses Claude.
+- Postgres: `docker start ra-postgres` (first time: see README). Then `pnpm install`, `pnpm db:migrate`, `pnpm dev` → http://localhost:3000 (`PORT=3001 pnpm dev` if taken).
+- Typecheck: `pnpm exec tsc --noEmit`. Lint/format: `pnpm check` / `pnpm fix` (Biome via ultracite).
+- Env lives in `.env.local` (copy `.env.example`): `AUTH_SECRET`, `POSTGRES_URL`, `USE_MOCK`, `ANTHROPIC_API_KEY`. Never commit `.env.local`.
+- **Mock mode:** `USE_MOCK=1` (default) serves `lib/ai/models.mock.ts` via `useMock` in `lib/ai/providers.ts`. Every LLM feature, including the coach, must keep working with `USE_MOCK=1` so teammates without a key aren't blocked.
+- The template's tools (artifacts, weather, suggestions) are off: `getCapabilities()` reports `tools: false`, so answers stay in the chat. Still to hide in the UI: model selector, attachments.
+- Fallback: if auth/DB breaks and costs more than ~30 min, run an unauthenticated session per the spec; don't debug infra all day.
 
 ## Rules
-- The API contract lives in BOTH `main.py` (Pydantic) and `api.ts` (TS types). Change them together, in the same commit.
-- Every new LLM feature must keep working in mock mode, so teammates without a key aren't blocked.
-- Three people work on `main` in parallel: keep changes small and inside the files your task needs. Use `/sync` to commit, pull and push.
-- After a change, verify it: curl the endpoint and/or check it in the browser. Don't say done without checking.
+- **The coach never blocks the answer.** It runs after the stream finishes (separate `/api/coach` call). If it fails or times out, the chat is unaffected and shows nothing.
+- Shared contracts live in `lib/reverse-alignment/types.ts` (one file, used by route and UI). Change it only after telling the team.
+- No scores, grades, forced rewrites, or a tip after every message. Silence is the default outcome.
+- Fixture/scripted coaching is labelled (`source: "fixture"`); never present it as inferred.
+- Three people work on `main` in parallel: stay inside the files your task needs. `components/chat/message.tsx` and the chat route are hotspots: one owner each (see `PLAN.md`). Use `/sync` to commit, pull and push.
+- After a change, verify it: typecheck, curl the route and/or check it in the browser. Don't say done without checking.
 - After 15:00 (feature freeze): bug fixes and demo polish only.
 - Speed over ceremony today: only show a plan first for multi-feature work; otherwise just build and report.
-- This repo uses Vite + npm (not Next.js/pnpm) — stick with it; switching mid-hackathon costs too much time.
 
 ## Lessons (add one line each time Claude gets the same thing wrong twice)
 -

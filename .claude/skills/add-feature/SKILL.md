@@ -5,11 +5,11 @@ description: Add a new feature end to end in this hackathon app — API contract
 
 Add the feature described in the arguments, in this order. Keep it minimal: the smallest version that demos well.
 
-1. **Contract first.** Propose the request/response shape in one short block and state it before writing code. Add the Pydantic models + route in `backend/app/main.py` and the matching TS types + fetch function in `frontend/src/api.ts`.
-2. **Mock path.** Make the route return realistic fake data when `llm.USE_MOCK` is true, so the frontend can be built immediately.
-3. **Real path.** Add the LLM logic in `backend/app/llm.py` (reuse the existing client, model, effort and fallback settings). Whenever the response is more than plain text, use structured outputs so the shape is guaranteed and the demo can't break on malformed JSON: define a Pydantic model for the output and call `_client.beta.messages.parse(..., output_format=YourModel)`, then read `response.parsed_output`. If `stop_reason == "refusal"` or `parsed_output` is None, return a sensible default in the contract's shape instead of raising.
-4. **UI.** Wire it into `frontend/src/App.tsx` (or a new component if App.tsx is getting crowded). Plain and readable beats pretty.
-5. **Verify.** Typecheck (`cd frontend && npx tsc -b`), start the backend if it isn't running, curl the new endpoint in mock mode, and report the actual response.
+1. **Contract first.** Propose the request/response shape in one short block and state it before writing code. Add the types to `lib/reverse-alignment/types.ts`.
+2. **Mock path.** New routes go in `app/(chat)/api/<name>/route.ts`. When `useMock` (from `lib/ai/providers.ts`) is true, return realistic fake data so others aren't blocked.
+3. **Real path.** Call Claude through the AI SDK with `anthropic(...)` from `@ai-sdk/anthropic` (see `lib/ai/providers.ts`; model ids in `lib/ai/models.ts`). When the response is more than plain text, use structured output (`generateText` with `Output.object({ schema })` and a zod schema) so the shape is guaranteed. On error, refusal or an invalid object, return a sensible default in the contract's shape instead of throwing.
+4. **UI.** Put new components in `components/reverse-alignment/`. Touch template files (`components/chat/*`, `hooks/use-active-chat.tsx`) only as much as needed to mount them.
+5. **Verify.** `pnpm exec tsc --noEmit`, make sure `pnpm dev` is running, curl the route in mock mode (routes need the guest session cookie: `curl -c jar -L localhost:3000/` first, then `-b jar`), and report the actual response.
 6. **Summarise** in 3–4 lines: the contract, files touched, and anything a teammate needs to know.
 
 Do not refactor unrelated code, add tests, or add dependencies unless the feature can't work without them.
