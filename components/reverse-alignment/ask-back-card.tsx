@@ -78,7 +78,7 @@ export function AskBackChecking() {
           />
         ))}
       </span>
-      Reading your prompt…
+      Flipping your prompt…
     </div>
   );
 }
