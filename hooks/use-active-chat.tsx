@@ -21,6 +21,7 @@ import { useDataStream } from "@/components/chat/data-stream-provider";
 import { getChatHistoryPaginationKey } from "@/components/chat/sidebar-history";
 import { toast } from "@/components/chat/toast";
 import type { VisibilityType } from "@/components/chat/visibility-selector";
+import { useCoach } from "@/components/reverse-alignment/coach-provider";
 import { useCoachTurn } from "@/components/reverse-alignment/use-coach-turn";
 import { useAutoResume } from "@/hooks/use-auto-resume";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
@@ -81,6 +82,12 @@ export function ActiveChatProvider({ children }: { children: ReactNode }) {
   }, [currentModelId]);
 
   const onCoachTurn = useCoachTurn();
+  // User-approved styles only. A ref, because the transport below is created once.
+  const { confirmedStyles } = useCoach().state.prefs;
+  const preferencesRef = useRef(confirmedStyles);
+  useEffect(() => {
+    preferencesRef.current = confirmedStyles;
+  }, [confirmedStyles]);
 
   const [input, setInput] = useState("");
   const [showCreditCardAlert, setShowCreditCardAlert] = useState(false);
@@ -170,6 +177,7 @@ export function ActiveChatProvider({ children }: { children: ReactNode }) {
             ...(isToolApprovalContinuation
               ? { messages: request.messages }
               : { message: lastMessage }),
+            preferences: preferencesRef.current,
             selectedChatModel: currentModelIdRef.current,
             selectedVisibilityType: visibility,
             ...request.body,

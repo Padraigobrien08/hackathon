@@ -96,6 +96,24 @@ function HiddenCategoryRow({ category }: { category: CoachingCategory }) {
   );
 }
 
+const STYLE_LABELS: Record<string, string> = { concise: "Short answers" };
+
+function RememberedStyleRow({ styleKey }: { styleKey: string }) {
+  const { dispatch } = useCoach();
+  const forget = useCallback(
+    () => dispatch({ kind: "concise", type: "PREFERENCE_CLEARED" }),
+    [dispatch]
+  );
+  return (
+    <li className="flex items-center justify-between gap-2">
+      <span>{STYLE_LABELS[styleKey] ?? styleKey}</span>
+      <Button onClick={forget} size="xs" variant="ghost">
+        Forget
+      </Button>
+    </li>
+  );
+}
+
 function Section({
   title,
   children,
@@ -140,7 +158,7 @@ export function CollaborationSettings() {
   // The UI controls frequency only; `enabled` stays true unless something else turns it off.
   const frequency = prefs.enabled ? prefs.frequency : "off";
   const styles = Object.entries(prefs.confirmedStyles).filter(
-    ([, value]) => value !== undefined
+    ([, value]) => value !== undefined && value !== false
   );
 
   return (
@@ -192,10 +210,8 @@ export function CollaborationSettings() {
           <Section title="Remembered preferences">
             {styles.length > 0 ? (
               <ul className="space-y-1">
-                {styles.map(([key, value]) => (
-                  <li key={key}>
-                    {key}: {String(value)}
-                  </li>
+                {styles.map(([key]) => (
+                  <RememberedStyleRow key={key} styleKey={key} />
                 ))}
               </ul>
             ) : (

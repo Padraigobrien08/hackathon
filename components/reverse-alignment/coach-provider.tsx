@@ -9,6 +9,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import type { PreferenceOffer } from "@/lib/reverse-alignment/preference-detector";
 import {
   type CoachEvent,
   type CoachState,
@@ -29,6 +30,9 @@ type CoachContextValue = {
   /** Tips by assistant message id. Browser-only: never saved with the chat. null = dismissed. */
   insights: ReadonlyMap<string, StoredInsight | null>;
   setInsight: (messageId: string, insight: StoredInsight | null) => void;
+  /** "Remember this?" offers by assistant message id. Replace the tip on that turn. null = answered. */
+  offers: ReadonlyMap<string, PreferenceOffer | null>;
+  setOffer: (messageId: string, offer: PreferenceOffer | null) => void;
   /** ?demo=1: skip the cooldown (scripted demo; shown with a badge). */
   demo: boolean;
   /** "How I'm helping" panel, opened from the tip card or the sidebar menu. */
@@ -42,6 +46,9 @@ const DEMO_KEY = "reverse-alignment:demo";
 export function CoachProvider({ children }: { children: ReactNode }) {
   const { state, dispatch } = useCoachState();
   const [insights, setInsights] = useState<Map<string, StoredInsight | null>>(
+    () => new Map()
+  );
+  const [offers, setOffers] = useState<Map<string, PreferenceOffer | null>>(
     () => new Map()
   );
   const [demo, setDemo] = useState(false);
@@ -68,17 +75,35 @@ export function CoachProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const setOffer = useCallback(
+    (messageId: string, offer: PreferenceOffer | null) => {
+      setOffers((prev) => new Map(prev).set(messageId, offer));
+    },
+    []
+  );
+
   const value = useMemo(
     () => ({
       demo,
       dispatch,
       insights,
+      offers,
       setInsight,
+      setOffer,
       setSettingsOpen,
       settingsOpen,
       state,
     }),
-    [demo, dispatch, insights, setInsight, settingsOpen, state]
+    [
+      demo,
+      dispatch,
+      insights,
+      offers,
+      setInsight,
+      setOffer,
+      settingsOpen,
+      state,
+    ]
   );
 
   return (

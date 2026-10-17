@@ -4,6 +4,10 @@ import { useCallback, useEffect, useRef } from "react";
 import { isSimple } from "@/lib/reverse-alignment/fixtures";
 import { preGate, shouldShowTip } from "@/lib/reverse-alignment/policy";
 import {
+  detectCorrection,
+  offerFor,
+} from "@/lib/reverse-alignment/preference-detector";
+import {
   type CoachEvent,
   coachReducer,
 } from "@/lib/reverse-alignment/session-state";
@@ -27,7 +31,7 @@ type FinishInfo = {
  * and nothing here can delay or break the answer itself.
  */
 export function useCoachTurn() {
-  const { state, dispatch, setInsight, demo } = useCoach();
+  const { state, dispatch, setInsight, setOffer, demo } = useCoach();
   // onFinish is registered once by useChat, so read the latest coach state through a ref.
   const stateRef = useRef(state);
   useEffect(() => {
@@ -48,6 +52,21 @@ export function useCoachTurn() {
       const userMessage = messages.findLast((m) => m.role === "user");
       const userText = userMessage ? getTextFromMessage(userMessage) : "";
       const replyText = getTextFromMessage(message);
+
+      // S5 first: "shorter" is a short message, so the isSimple check below would skip it.
+      const isFollowUp = messages.filter((m) => m.role === "user").length > 1;
+      const correction = detectCorrection(userText, isFollowUp);
+      if (correction) {
+        const seen: CoachEvent = { kind: correction, type: "CORRECTION_SEEN" };
+        dispatch(seen);
+        const afterSeen = coachReducer(stateRef.current, seen);
+        const offer = offerFor(correction, afterSeen.prefs, afterSeen.signals);
+        if (offer) {
+          setOffer(message.id, offer);
+          return; // one card per turn: the offer replaces any tip
+        }
+      }
+
       // Simple turns: no observer call, and they don't count toward the cooldown.
       if (!userText.trim() || !replyText.trim() || isSimple(userText)) {
         return;
@@ -96,6 +115,6 @@ export function useCoachTurn() {
       });
       dispatch({ category: response.decision.category, type: "TIP_SHOWN" });
     },
-    [demo, dispatch, setInsight]
+    [demo, dispatch, setInsight, setOffer]
   );
 }

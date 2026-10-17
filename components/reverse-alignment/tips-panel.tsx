@@ -6,6 +6,7 @@ import type { ChatMessage } from "@/lib/types";
 import { useCoach } from "./coach-provider";
 import { InsightCard } from "./insight-card";
 import { useMessageTip } from "./message-insight";
+import { PreferenceOfferCard, useMessageOffer } from "./preference-offer";
 
 /** Right-hand panel listing this chat's tips (wide screens only), so answers stay uncluttered. */
 export function TipsPanel({
@@ -16,9 +17,12 @@ export function TipsPanel({
   /** The assistant message still streaming: no tip until it finishes. */
   streamingId?: string;
 }) {
-  const { insights } = useCoach();
+  const { insights, offers } = useCoach();
   const withTips = messages.filter(
-    (m) => m.role === "assistant" && m.id !== streamingId && insights.get(m.id)
+    (m) =>
+      m.role === "assistant" &&
+      m.id !== streamingId &&
+      (insights.get(m.id) || offers.get(m.id))
   );
 
   return (
@@ -45,23 +49,28 @@ export function TipsPanel({
 
 function TipsPanelItem({ messageId }: { messageId: string }) {
   const { onDismiss, openSettings, stored } = useMessageTip(messageId);
+  const { offer } = useMessageOffer(messageId);
   const showReply = useCallback(() => {
     document
       .getElementById(`message-${messageId}`)
       ?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [messageId]);
 
-  if (!stored) {
+  if (!(stored || offer)) {
     return null;
   }
   return (
     <div className="space-y-1">
-      <InsightCard
-        decision={stored.decision}
-        onDismiss={onDismiss}
-        onOpenSettings={openSettings}
-        scripted={stored.scripted}
-      />
+      {offer ? (
+        <PreferenceOfferCard messageId={messageId} />
+      ) : stored ? (
+        <InsightCard
+          decision={stored.decision}
+          onDismiss={onDismiss}
+          onOpenSettings={openSettings}
+          scripted={stored.scripted}
+        />
+      ) : null}
       <button
         className="px-1 text-[11px] text-muted-foreground/70 hover:text-foreground"
         onClick={showReply}

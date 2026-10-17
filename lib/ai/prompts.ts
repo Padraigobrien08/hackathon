@@ -1,5 +1,6 @@
 import type { Geo } from "@vercel/functions";
 import type { ArtifactKind } from "@/components/chat/artifact";
+import type { ConfirmedStyles } from "@/lib/reverse-alignment/types";
 
 export const artifactsPrompt = `
 Artifacts is a side panel that displays content alongside the conversation. It supports scripts (code), documents (text), and spreadsheets. Changes appear in real-time.
@@ -63,14 +64,24 @@ About the origin of user's request:
 - country: ${requestHints.country}
 `;
 
+/** Added when the user approved short answers (fixed text, never user input). The mock model looks for it too. */
+export const CONCISE_PREFERENCE_PROMPT =
+  "The user has asked for short answers and approved remembering that: answer in 3 sentences or fewer, with no headings or lists. Keep any draft they ask for to the essentials.";
+
+const getPreferencesPrompt = (preferences?: ConfirmedStyles) =>
+  preferences?.concise ? `\n\n${CONCISE_PREFERENCE_PROMPT}` : "";
+
 export const systemPrompt = ({
   requestHints,
   supportsTools,
+  preferences,
 }: {
   requestHints: RequestHints;
   supportsTools: boolean;
+  preferences?: ConfirmedStyles;
 }) => {
-  const requestPrompt = getRequestPromptFromHints(requestHints);
+  const requestPrompt =
+    getRequestPromptFromHints(requestHints) + getPreferencesPrompt(preferences);
 
   if (!supportsTools) {
     return `${regularPrompt}\n\n${requestPrompt}`;

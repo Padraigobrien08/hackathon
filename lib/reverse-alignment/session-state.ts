@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useReducer, useRef } from "react";
+import type { CorrectionKind } from "./preference-detector";
 import {
   type CoachingCategory,
   type CoachingPreferences,
@@ -24,6 +25,10 @@ export type CoachEvent =
   | { type: "SET_FREQUENCY"; frequency: CoachingPreferences["frequency"] }
   | { type: "SET_ENABLED"; enabled: boolean }
   | { type: "SET_SHOW_ASSUMPTIONS"; showAssumptions: boolean }
+  | { type: "CORRECTION_SEEN"; kind: CorrectionKind }
+  | { type: "PREFERENCE_ACCEPTED"; kind: CorrectionKind }
+  | { type: "PREFERENCE_DECLINED"; kind: CorrectionKind } // count restarts: may ask again, never every turn
+  | { type: "PREFERENCE_CLEARED"; kind: CorrectionKind } // "Forget" in settings
   | { type: "RESET" }
   | { type: "HYDRATE"; state: CoachState };
 
@@ -108,6 +113,33 @@ export function coachReducer(state: CoachState, event: CoachEvent): CoachState {
       return {
         ...state,
         prefs: { ...prefs, showAssumptions: event.showAssumptions },
+      };
+    case "CORRECTION_SEEN":
+      return {
+        ...state,
+        signals: {
+          ...signals,
+          correctionCounts: {
+            ...signals.correctionCounts,
+            [event.kind]: (signals.correctionCounts[event.kind] ?? 0) + 1,
+          },
+        },
+      };
+    case "PREFERENCE_ACCEPTED":
+    case "PREFERENCE_DECLINED":
+    case "PREFERENCE_CLEARED":
+      return {
+        prefs: {
+          ...prefs,
+          confirmedStyles: {
+            ...prefs.confirmedStyles,
+            concise: event.type === "PREFERENCE_ACCEPTED" ? true : undefined,
+          },
+        },
+        signals: {
+          ...signals,
+          correctionCounts: { ...signals.correctionCounts, [event.kind]: 0 },
+        },
       };
     case "RESET":
       return INITIAL_STATE;
