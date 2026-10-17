@@ -144,6 +144,12 @@ function PureMultimodalInput({
     setLocalStorageInput(input);
   }, [input, setLocalStorageInput]);
 
+  // A suggestion sends directly, so drop any saved draft with it.
+  const clearDraft = useCallback(() => {
+    setLocalStorageInput("");
+    setInput("");
+  }, [setInput, setLocalStorageInput]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadQueue, setUploadQueue] = useState<string[]>([]);
   const [slashOpen, setSlashOpen] = useState(false);
@@ -479,6 +485,7 @@ function PureMultimodalInput({
         uploadQueue.length === 0 && (
           <SuggestedActions
             chatId={chatId}
+            onSent={clearDraft}
             selectedVisibilityType={selectedVisibilityType}
             sendMessage={sendMessage}
           />
