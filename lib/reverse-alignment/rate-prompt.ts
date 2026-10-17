@@ -11,7 +11,12 @@ import {
   isSimple,
 } from "./fixtures";
 import { promptStrength } from "./strength";
-import type { RateRequest, RateResponse, Rubric } from "./types";
+import type {
+  PromptStrength,
+  RateRequest,
+  RateResponse,
+  Rubric,
+} from "./types";
 
 const RATE_MODEL = "gpt-6-luna";
 // Reasoning off: ~1.5s on our eval cases, as sensible as the post-answer coach. Runs alongside the answer.
@@ -24,7 +29,37 @@ const RATE_PROMPT = `You rate a prompt someone is about to send to an AI assista
 - success_criteria: states format, length, detail level or definition of done where the request is open-ended. Simple factual questions don't need it (2 or null).
 - efficiency: no repeated or contradictory instructions, no large irrelevant paste, one well-specified request.
 If a previous message is given and the new one corrects the answer to it ("shorter", "no, I meant…", "simpler"), score the new message in that light: the criteria were missing from the previous request.
-Be fair to short, clear requests: a specific one-line question is 2 on task. Score 0 only when the gap would clearly change the answer. Return only the scores.`;
+Be fair to short, clear requests: a specific one-line question is 2 on task. Score 0 only when the gap would clearly change the answer.
+If any dimension is 0, also write question: ONE short, friendly question (max 120 characters) asking for the single most useful missing detail, specific to this prompt, e.g. "Who is the newsletter for, and how often should it go out?". Never mention scores or call the prompt weak. Otherwise question is null.`;
+
+const MAX_QUESTION_CHARS = 160;
+
+// Used when the model gives no question (and in mock mode): asks for the lowest-scored dimension.
+const FALLBACK_QUESTIONS: Record<keyof Omit<Rubric, "evidence">, string> = {
+  context:
+    "Who is this for, and what should it help them do? Any details I can't see would help too.",
+  efficiency: "Which part matters most, and what exactly should I do with it?",
+  success_criteria:
+    "What should a good answer look like: format, length, or level of detail?",
+  task: "What would you like me to do with this: explain it, compare options, write something, or fix a problem?",
+};
+
+function questionFor(
+  rubric: Rubric,
+  strength: PromptStrength,
+  modelQuestion?: string | null
+) {
+  if (strength !== "weak") {
+    return;
+  }
+  const trimmed = modelQuestion?.trim();
+  if (trimmed) {
+    return trimmed.slice(0, MAX_QUESTION_CHARS);
+  }
+  const order = ["task", "context", "success_criteria", "efficiency"] as const;
+  const weakest = order.find((key) => rubric[key] === 0) ?? "task";
+  return FALLBACK_QUESTIONS[weakest];
+}
 
 const score = z.number().int().min(0).max(2).nullable();
 // biome-ignore assist/source/useSortedKeys: same order as the rubric everywhere else.
@@ -33,6 +68,7 @@ const scoresSchema = z.object({
   context: score,
   success_criteria: score,
   efficiency: score,
+  question: z.string().nullable(),
 });
 
 /** Never throws: any failure is "no tier". */
@@ -48,9 +84,16 @@ export async function ratePrompt({
       userMessage,
       fixtureDecision({ assistantReply: "", previousUserMessage, userMessage })
     );
-    return rubric
-      ? { rubric, source: "fixture", strength: promptStrength(rubric) }
-      : { source: "fixture" };
+    if (!rubric) {
+      return { source: "fixture" };
+    }
+    const strength = promptStrength(rubric);
+    return {
+      question: questionFor(rubric, strength),
+      rubric,
+      source: "fixture",
+      strength,
+    };
   }
   try {
     const previous = previousUserMessage
@@ -67,9 +110,16 @@ export async function ratePrompt({
         openai: { forceReasoning: true, reasoningEffort: "none" },
       },
     });
+    const { question, ...scores } = output;
     // Schema already limits each score to an integer 0-2 or null.
-    const rubric = { ...output, evidence: [] } as Rubric;
-    return { rubric, source: "llm", strength: promptStrength(rubric) };
+    const rubric = { ...scores, evidence: [] } as Rubric;
+    const strength = promptStrength(rubric);
+    return {
+      question: questionFor(rubric, strength, question),
+      rubric,
+      source: "llm",
+      strength,
+    };
   } catch (error) {
     console.warn("[rate] prompt rating failed, no tier:", error);
     return { source: "llm" };
