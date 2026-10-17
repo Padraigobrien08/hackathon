@@ -17,7 +17,7 @@ import type { ChatMessage } from "@/lib/types";
 import { getTextFromMessage } from "@/lib/utils";
 import { useCoach } from "./coach-provider";
 
-const COACH_TIMEOUT_MS = 8000;
+const COACH_TIMEOUT_MS = 15_000; // above the server-side observer timeout (12s)
 
 // Fire-and-forget analytics (app/(chat)/api/prompt-metrics). Never awaited, never surfaces errors.
 function recordPromptMetric(

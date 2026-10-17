@@ -7,7 +7,7 @@ Product: a normal AI chat that answers first and occasionally offers ONE optiona
 ## Stack (foundation: Vercel AI Chatbot template, github.com/vercel/ai-chatbot)
 - Next.js 16 (App Router) + React 19 + TypeScript, AI SDK 7 (`ai`, `@ai-sdk/react` `useChat`), Tailwind v4, shadcn/ui, **pnpm**.
 - Template infra: NextAuth guest sessions (`app/(auth)`, `proxy.ts` auto-redirects to guest login), Postgres via Drizzle (`lib/db`). Redis and Blob are optional; leave unset.
-- Model: Claude via `@ai-sdk/anthropic` (pinned 4.0.9 to match `ai@7.0.15`; don't bump one without the other). Chat `claude-sonnet-5-5`, titles `claude-haiku-5-5`, set in `lib/ai/models.ts`. No AI Gateway.
+- Model: OpenAI via `@ai-sdk/openai` (pinned 4.0.8 to match `ai@7.0.15`; don't bump one without the other). Chat `gpt-6.1-sol`, titles and coach `gpt-6-luna`, set in `lib/ai/models.ts` and `lib/reverse-alignment/observer.ts`. No AI Gateway, no Anthropic.
 - Keep the template's chat UI, streaming, history and message actions. Add our layer on top; don't rebuild what the template already does.
 
 ## Where things live
@@ -23,7 +23,7 @@ Product: a normal AI chat that answers first and occasionally offers ONE optiona
 ## Run
 - Postgres: `docker start ra-postgres` (first time: see README). Then `pnpm install`, `pnpm db:migrate`, `pnpm dev` → http://localhost:3000 (`PORT=3001 pnpm dev` if taken).
 - Typecheck: `pnpm exec tsc --noEmit`. Policy tests: `pnpm exec tsx --test lib/reverse-alignment/policy.test.ts`. Lint/format: `pnpm check` / `pnpm fix` (Biome via ultracite).
-- Env lives in `.env.local` (copy `.env.example`): `AUTH_SECRET`, `POSTGRES_URL`, `USE_MOCK`, `ANTHROPIC_API_KEY`. Never commit `.env.local`.
+- Env lives in `.env.local` (copy `.env.example`): `AUTH_SECRET`, `POSTGRES_URL`, `USE_MOCK`, `OPENAI_API_KEY`. Never commit `.env.local`.
 - **Mock mode:** `USE_MOCK=1` (default) serves `lib/ai/models.mock.ts` via `useMock` in `lib/ai/providers.ts`. Every LLM feature, including the coach, must keep working with `USE_MOCK=1` so teammates without a key aren't blocked.
 - The template's tools (artifacts, weather, suggestions) are off: `getCapabilities()` reports `tools: false`, so answers stay in the chat. Model selector, attachments, visibility selector and Vercel links are hidden in the UI.
 - Guest message cap raised to 500/hour in `lib/ai/entitlements.ts` (template default 10/hour blocks demo rehearsals). Lower it before any public deploy.

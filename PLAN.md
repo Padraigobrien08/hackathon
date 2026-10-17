@@ -1,7 +1,7 @@
 # Reverse Alignment — Build Plan
 
 An AI chat assistant that answers first, and occasionally (optionally) helps the user get better at working with AI.
-Foundation: the Vercel AI Chatbot template (Next.js 16, AI SDK 7), calling Claude directly via `@ai-sdk/anthropic`.
+Foundation: the Vercel AI Chatbot template (Next.js 16, AI SDK 7), calling OpenAI directly via `@ai-sdk/openai`.
 
 **Principle:** Help first. Teach second. Never interrupt unless it materially improves the outcome.
 

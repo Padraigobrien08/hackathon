@@ -22,7 +22,7 @@ import type {
 
 // Small, fast model: this runs after every eligible answer.
 const OBSERVER_MODEL = "gpt-6-luna"; // needs OPENAI_API_KEY
-const OBSERVER_TIMEOUT_MS = 6000;
+const OBSERVER_TIMEOUT_MS = 12_000; // rubric + tip in one structured call: 3-7s observed on gpt-6-luna
 const MAX_REPLY_CHARS = 4000;
 const MAX_PREVIOUS_MESSAGE_CHARS = 1000;
 
