@@ -21,6 +21,7 @@ import { useDataStream } from "@/components/chat/data-stream-provider";
 import { getChatHistoryPaginationKey } from "@/components/chat/sidebar-history";
 import { toast } from "@/components/chat/toast";
 import type { VisibilityType } from "@/components/chat/visibility-selector";
+import { useCoachTurn } from "@/components/reverse-alignment/use-coach-turn";
 import { useAutoResume } from "@/hooks/use-auto-resume";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
 import type { Vote } from "@/lib/db/schema";
@@ -79,6 +80,8 @@ export function ActiveChatProvider({ children }: { children: ReactNode }) {
     currentModelIdRef.current = currentModelId;
   }, [currentModelId]);
 
+  const onCoachTurn = useCoachTurn();
+
   const [input, setInput] = useState("");
   const [showCreditCardAlert, setShowCreditCardAlert] = useState(false);
 
@@ -129,8 +132,9 @@ export function ActiveChatProvider({ children }: { children: ReactNode }) {
         });
       }
     },
-    onFinish: () => {
+    onFinish: (finish) => {
       mutate(unstable_serialize(getChatHistoryPaginationKey));
+      onCoachTurn(finish); // Reverse Alignment: post-answer coaching, never blocks
     },
     sendAutomaticallyWhen: ({ messages: currentMessages }) => {
       const lastMessage = currentMessages.at(-1);
