@@ -1,7 +1,9 @@
 import type { InferSelectModel } from "drizzle-orm";
 import {
   boolean,
+  doublePrecision,
   foreignKey,
+  integer,
   json,
   pgTable,
   primaryKey,
@@ -134,3 +136,37 @@ export const stream = pgTable(
 );
 
 export type Stream = InferSelectModel<typeof stream>;
+
+// Reverse Alignment: one row per answered user prompt. Token counts are our own estimate
+// (gpt-tokenizer), costs at GPT-6 Astra rates (lib/reverse-alignment/pricing.ts).
+// No foreign keys on purpose: deleting a chat or regenerating a message must not be blocked by analytics rows.
+export const promptMetric = pgTable("PromptMetric", {
+  answerModel: varchar("answerModel", { length: 64 }).notNull(),
+  assistantMessageId: uuid("assistantMessageId").notNull().unique(),
+  // Worth-responding gate (not built yet): attemptNumber, gateDecision, taskId stay null until the gate
+  // passes a decision to recordPromptMetric. A task runs from its first prompt to the first "answered" one;
+  // "avg prompts until the AI could answer" = avg(attemptNumber) where gateDecision = 'answered'.
+  attemptNumber: integer("attemptNumber"),
+  chatId: uuid("chatId").notNull(),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  // Filled in later by the prompt evaluator; null until then. Shape is the evaluator's to define.
+  evaluatedAt: timestamp("evaluatedAt"),
+  evaluation: json("evaluation"),
+  gateDecision: varchar("gateDecision", { enum: ["answered", "needs_more"] }),
+  historyTokens: integer("historyTokens").notNull(),
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  inputCostUsd: doublePrecision("inputCostUsd").notNull(),
+  // promptTokens + historyTokens: roughly what an API bills as input (excludes the system prompt).
+  inputTokens: integer("inputTokens").notNull(),
+  outputCostUsd: doublePrecision("outputCostUsd").notNull(),
+  outputTokens: integer("outputTokens").notNull(),
+  pricingModel: varchar("pricingModel", { length: 64 }).notNull(),
+  prompt: text("prompt").notNull(),
+  promptTokens: integer("promptTokens").notNull(),
+  taskId: uuid("taskId"),
+  totalCostUsd: doublePrecision("totalCostUsd").notNull(),
+  userId: uuid("userId").notNull(),
+  userMessageId: uuid("userMessageId").notNull(),
+});
+
+export type PromptMetric = InferSelectModel<typeof promptMetric>;

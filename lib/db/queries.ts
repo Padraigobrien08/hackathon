@@ -9,6 +9,7 @@ import {
   gt,
   gte,
   inArray,
+  isNotNull,
   lt,
   type SQL,
 } from "drizzle-orm";
@@ -24,6 +25,7 @@ import {
   type DBMessage,
   document,
   message,
+  promptMetric,
   type Suggestion,
   stream,
   suggestion,
@@ -585,6 +587,67 @@ export async function getStreamIdsByChatId({ chatId }: { chatId: string }) {
       .execute();
 
     return streamIds.map(({ id }) => id);
+  } catch (error) {
+    throw new ChatbotError("bad_request:database", { cause: error });
+  }
+}
+
+// Reverse Alignment: prompt metrics. Idempotent per assistant message.
+// When the gate's decision is passed, taskId/attemptNumber are derived from the chat's previous gated row:
+// after a "needs_more" this prompt continues that task, otherwise it starts a new one at attempt 1.
+export async function recordPromptMetric(
+  metric: Omit<typeof promptMetric.$inferInsert, "taskId" | "attemptNumber">
+) {
+  try {
+    let task: { taskId: string; attemptNumber: number } | undefined;
+    if (metric.gateDecision) {
+      const [previous] = await db
+        .select({
+          attemptNumber: promptMetric.attemptNumber,
+          gateDecision: promptMetric.gateDecision,
+          taskId: promptMetric.taskId,
+        })
+        .from(promptMetric)
+        .where(
+          and(
+            eq(promptMetric.chatId, metric.chatId),
+            isNotNull(promptMetric.gateDecision)
+          )
+        )
+        .orderBy(desc(promptMetric.createdAt))
+        .limit(1);
+      task =
+        previous?.gateDecision === "needs_more" && previous.taskId
+          ? {
+              attemptNumber: (previous.attemptNumber ?? 1) + 1,
+              taskId: previous.taskId,
+            }
+          : { attemptNumber: 1, taskId: generateUUID() };
+    }
+    return await db
+      .insert(promptMetric)
+      .values({ ...metric, ...task })
+      .onConflictDoNothing({ target: promptMetric.assistantMessageId })
+      .returning();
+  } catch (error) {
+    throw new ChatbotError("bad_request:database", { cause: error });
+  }
+}
+
+// For the prompt evaluator: attach its result to an existing metric row.
+export async function savePromptEvaluation({
+  assistantMessageId,
+  evaluation,
+}: {
+  assistantMessageId: string;
+  evaluation: unknown;
+}) {
+  try {
+    return await db
+      .update(promptMetric)
+      .set({ evaluatedAt: new Date(), evaluation })
+      .where(eq(promptMetric.assistantMessageId, assistantMessageId))
+      .returning();
   } catch (error) {
     throw new ChatbotError("bad_request:database", { cause: error });
   }

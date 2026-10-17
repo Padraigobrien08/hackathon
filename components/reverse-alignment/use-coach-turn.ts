@@ -18,6 +18,19 @@ import { useCoach } from "./coach-provider";
 
 const COACH_TIMEOUT_MS = 8000;
 
+// Fire-and-forget analytics (app/(chat)/api/prompt-metrics). Never awaited, never surfaces errors.
+function recordPromptMetric(
+  userMessageId: string,
+  assistantMessageId: string,
+  assistantReply: string
+) {
+  fetch(`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/api/prompt-metrics`, {
+    body: JSON.stringify({ assistantMessageId, assistantReply, userMessageId }),
+    headers: { "Content-Type": "application/json" },
+    method: "POST",
+  }).catch(() => undefined);
+}
+
 type FinishInfo = {
   message: ChatMessage;
   messages: ChatMessage[];
@@ -52,6 +65,9 @@ export function useCoachTurn() {
       const userMessage = messages.findLast((m) => m.role === "user");
       const userText = userMessage ? getTextFromMessage(userMessage) : "";
       const replyText = getTextFromMessage(message);
+      if (userMessage && replyText.trim()) {
+        recordPromptMetric(userMessage.id, message.id, replyText);
+      }
 
       // S5 first: "shorter" is a short message, so the isSimple check below would skip it.
       const isFollowUp = messages.filter((m) => m.role === "user").length > 1;
