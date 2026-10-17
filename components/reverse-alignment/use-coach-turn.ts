@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { isSimple } from "@/lib/reverse-alignment/fixtures";
+import { isChatLive } from "@/lib/reverse-alignment/live";
 import { preGate, shouldShowTip } from "@/lib/reverse-alignment/policy";
 import {
   detectCorrection,
@@ -17,7 +18,7 @@ import type { ChatMessage } from "@/lib/types";
 import { getTextFromMessage } from "@/lib/utils";
 import { useCoach } from "./coach-provider";
 
-const COACH_TIMEOUT_MS = 15_000; // above the server-side observer timeout (12s)
+const COACH_TIMEOUT_MS = 15_000; // above the observer's 12s server timeout
 
 // Fire-and-forget analytics (app/(chat)/api/prompt-metrics). Never awaited, never surfaces errors.
 function recordPromptMetric(
@@ -156,6 +157,7 @@ export function useCoachTurn(chatId: string) {
           {
             body: JSON.stringify({
               assistantReply: replyText,
+              live: isChatLive(chatId),
               previousUserMessage: previousUserText,
               userMessage: userText,
             }),

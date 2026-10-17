@@ -1,6 +1,6 @@
 # Reverse Alignment
 
-An AI assistant that answers your request first, and occasionally offers one optional tip to help you work better with AI. Built on the [Vercel AI Chatbot](https://github.com/vercel/ai-chatbot) template, using Claude via `@ai-sdk/anthropic`.
+An AI assistant that answers your request first, and occasionally offers one optional tip to help you work better with AI. Built on the [Vercel AI Chatbot](https://github.com/vercel/ai-chatbot) template, using OpenAI (`gpt-6-luna`) via `@ai-sdk/openai`.
 
 Plan, systems and owners: [PLAN.md](PLAN.md). Rules for Claude Code: [CLAUDE.md](CLAUDE.md).
 
@@ -22,7 +22,7 @@ Already have the container? `docker start ra-postgres`. Port 3000 taken? `PORT=3
 
 ## Turn on real Claude
 
-In `.env.local`: `USE_MOCK=0` and `ANTHROPIC_API_KEY=...`. Only the person with the key needs this.
+In `.env.local`: `USE_MOCK=0` and `OPENAI_API_KEY=...`. Only the person with the key needs this.
 
 ## Checks
 

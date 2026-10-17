@@ -31,6 +31,7 @@ import { useAutoResume } from "@/hooks/use-auto-resume";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
 import type { Vote } from "@/lib/db/schema";
 import { ChatbotError } from "@/lib/errors";
+import { isChatLive } from "@/lib/reverse-alignment/live";
 import type { ChatMessage } from "@/lib/types";
 import { fetcher, fetchWithErrorHandlers, generateUUID } from "@/lib/utils";
 
@@ -182,6 +183,7 @@ export function ActiveChatProvider({ children }: { children: ReactNode }) {
             ...(isToolApprovalContinuation
               ? { messages: request.messages }
               : { message: lastMessage }),
+            ...(isChatLive(request.id) && { live: true }),
             preferences: preferencesRef.current,
             selectedChatModel: currentModelIdRef.current,
             selectedVisibilityType: visibility,
