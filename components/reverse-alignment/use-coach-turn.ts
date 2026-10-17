@@ -5,13 +5,14 @@ import { isSimple } from "@/lib/reverse-alignment/fixtures";
 import { preGate, shouldShowTip } from "@/lib/reverse-alignment/policy";
 import {
   detectCorrection,
+  evidenceText,
   offerFor,
 } from "@/lib/reverse-alignment/preference-detector";
 import {
   type CoachEvent,
   coachReducer,
 } from "@/lib/reverse-alignment/session-state";
-import type { CoachResponse } from "@/lib/reverse-alignment/types";
+import { type CoachResponse, STYLE_KINDS } from "@/lib/reverse-alignment/types";
 import type { ChatMessage } from "@/lib/types";
 import { getTextFromMessage } from "@/lib/utils";
 import { useCoach } from "./coach-provider";
@@ -44,7 +45,8 @@ type FinishInfo = {
  * and nothing here can delay or break the answer itself.
  */
 export function useCoachTurn() {
-  const { state, dispatch, setInsight, setOffer, demo } = useCoach();
+  const { state, dispatch, setInsight, setOffer, setAdaptation, demo } =
+    useCoach();
   // onFinish is registered once by useChat, so read the latest coach state through a ref.
   const stateRef = useRef(state);
   useEffect(() => {
@@ -62,18 +64,35 @@ export function useCoachTurn() {
       if (isAbort || isDisconnect || isError || message.role !== "assistant") {
         return;
       }
-      const userMessage = messages.findLast((m) => m.role === "user");
+      const userMessages = messages.filter((m) => m.role === "user");
+      const userMessage = userMessages.at(-1);
+      const previousUserMessage = userMessages.at(-2);
       const userText = userMessage ? getTextFromMessage(userMessage) : "";
+      const previousUserText = previousUserMessage
+        ? getTextFromMessage(previousUserMessage)
+        : undefined;
       const replyText = getTextFromMessage(message);
       if (userMessage && replyText.trim()) {
         recordPromptMetric(userMessage.id, message.id, replyText);
       }
 
+      // The styles this answer was written with (sent with the request), for the "Adapted" chip.
+      const { confirmedStyles } = stateRef.current.prefs;
+      setAdaptation(
+        message.id,
+        STYLE_KINDS.filter((kind) => confirmedStyles[kind])
+      );
+
       // S5 first: "shorter" is a short message, so the isSimple check below would skip it.
       const isFollowUp = messages.filter((m) => m.role === "user").length > 1;
       const correction = detectCorrection(userText, isFollowUp);
       if (correction) {
-        const seen: CoachEvent = { kind: correction, type: "CORRECTION_SEEN" };
+        const seen: CoachEvent = {
+          at: Date.now(),
+          kind: correction,
+          text: evidenceText(userText),
+          type: "CORRECTION_SEEN",
+        };
         dispatch(seen);
         const afterSeen = coachReducer(stateRef.current, seen);
         const offer = offerFor(correction, afterSeen.prefs, afterSeen.signals);
@@ -103,6 +122,7 @@ export function useCoachTurn() {
           {
             body: JSON.stringify({
               assistantReply: replyText,
+              previousUserMessage: previousUserText,
               userMessage: userText,
             }),
             headers: { "Content-Type": "application/json" },
@@ -131,6 +151,6 @@ export function useCoachTurn() {
       });
       dispatch({ category: response.decision.category, type: "TIP_SHOWN" });
     },
-    [demo, dispatch, setInsight, setOffer]
+    [demo, dispatch, setAdaptation, setInsight, setOffer]
   );
 }

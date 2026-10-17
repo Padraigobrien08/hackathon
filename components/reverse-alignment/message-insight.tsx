@@ -1,6 +1,8 @@
 "use client";
 
+import { SlidersHorizontalIcon } from "lucide-react";
 import { useCallback } from "react";
+import { STYLE_LABELS } from "@/lib/reverse-alignment/preference-detector";
 import type { DismissKind } from "@/lib/reverse-alignment/session-state";
 import { useCoach } from "./coach-provider";
 import { InsightCard } from "./insight-card";
@@ -34,8 +36,40 @@ export function useMessageTip(messageId: string) {
   return { onDismiss, openSettings, stored };
 }
 
-/** Inline tip under a finished assistant message. Narrow screens only; wide screens use <TipsPanel>. */
+/** "Adapted: short answers" under a reply written with remembered styles. Opens the settings panel. */
+function AdaptedChip({ messageId }: { messageId: string }) {
+  const { adaptations, setSettingsOpen } = useCoach();
+  const styles = adaptations.get(messageId);
+  const open = useCallback(() => setSettingsOpen(true), [setSettingsOpen]);
+  if (!styles?.length) {
+    return null;
+  }
+  const labels = styles.map((kind) => STYLE_LABELS[kind].toLowerCase());
+  return (
+    <button
+      className="flex w-fit items-center gap-1.5 rounded-md px-1 text-[11px] text-muted-foreground/80 hover:text-foreground"
+      data-testid="adapted-chip"
+      onClick={open}
+      title="Remembered from your corrections. Change it in How I'm helping."
+      type="button"
+    >
+      <SlidersHorizontalIcon aria-hidden className="size-3" />
+      Adapted: {labels.join(", ")}
+    </button>
+  );
+}
+
+/** Under a finished assistant message: the "Adapted" chip, then the tip or offer (narrow screens; wide screens use <TipsPanel>). */
 export function MessageInsight({ messageId }: { messageId: string }) {
+  return (
+    <>
+      <AdaptedChip messageId={messageId} />
+      <MessageTipOrOffer messageId={messageId} />
+    </>
+  );
+}
+
+function MessageTipOrOffer({ messageId }: { messageId: string }) {
   const { onDismiss, openSettings, stored } = useMessageTip(messageId);
   const { offer } = useMessageOffer(messageId);
 

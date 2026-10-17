@@ -21,6 +21,10 @@ export async function POST(request: Request) {
     return Response.json(
       await observe({
         assistantReply: body.assistantReply,
+        previousUserMessage:
+          typeof body.previousUserMessage === "string"
+            ? body.previousUserMessage
+            : undefined,
         userMessage: body.userMessage,
       })
     );
