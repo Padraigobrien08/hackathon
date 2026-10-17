@@ -121,6 +121,11 @@ export async function observe({
       model: openai(OBSERVER_MODEL),
       output: Output.object({ schema: decisionSchema }),
       prompt: `${previous}<user_request>\n${userMessage}\n</user_request>\n\n<assistant_answer>\n${assistantReply.slice(0, MAX_REPLY_CHARS)}\n</assistant_answer>${lengthHint}`,
+      // "low" instead of the default "medium": ~1s faster with tiers as sensible on our eval cases.
+      // "none" was 2x faster but rated strong prompts moderate. forceReasoning: the SDK would drop it otherwise.
+      providerOptions: {
+        openai: { forceReasoning: true, reasoningEffort: "low" },
+      },
     });
     // Schema already limits each score to an integer 0-2 or null.
     const rubric = output.rubric as Rubric;

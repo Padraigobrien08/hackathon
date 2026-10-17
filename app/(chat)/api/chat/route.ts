@@ -322,7 +322,11 @@ export async function POST(request: Request) {
               gateway: { order: modelConfig.gatewayOrder },
             }),
             ...(modelConfig?.reasoningEffort && {
-              openai: { reasoningEffort: modelConfig.reasoningEffort },
+              // forceReasoning: the SDK doesn't recognise gpt-6-luna as a reasoning model and would drop the effort.
+              openai: {
+                forceReasoning: true,
+                reasoningEffort: modelConfig.reasoningEffort,
+              },
             }),
           },
           stopWhen: isStepCount(5),

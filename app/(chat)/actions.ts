@@ -33,6 +33,8 @@ export async function generateTitleFromUserMessage({
     prompt: messageText,
     providerOptions: {
       gateway: { order: titleModel.gatewayOrder },
+      // The chat stream waits for the title before closing, so a slow title delays the coach too.
+      openai: { forceReasoning: true, reasoningEffort: "none" },
     },
   });
   const generatedTitle = text

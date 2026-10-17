@@ -30,6 +30,8 @@ export const chatModels: ChatModel[] = [
     id: "gpt-6-luna",
     name: "GPT-6 Luna",
     provider: "openai",
+    // gpt-6-luna reasons at "medium" by default; off = first text ~0.5s sooner, answers ~2s faster.
+    reasoningEffort: "none",
   },
 ];
 
